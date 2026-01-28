@@ -1,0 +1,19 @@
+0 verbose cli /usr/bin/node /usr/bin/npm
+1 info using npm@11.6.2
+2 info using node@v24.12.0
+3 silly config load:file:/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/ec2-user/AXO-Project/.npmrc
+5 silly config load:file:/home/ec2-user/.npmrc
+6 silly config load:file:/usr/etc/npmrc
+7 verbose title npm config set prefix /home/ec2-user/.npm-global
+8 verbose argv "config" "set" "prefix" "/home/ec2-user/.npm-global"
+9 verbose logfile logs-max:10 dir:/home/ec2-user/.npm/_logs/2025-12-23T09_07_10_546Z-
+10 verbose logfile /home/ec2-user/.npm/_logs/2025-12-23T09_07_10_546Z-debug-0.log
+11 silly logfile done cleaning log files
+12 info config set "prefix" "/home/ec2-user/.npm-global"
+13 verbose cwd /home/ec2-user/AXO-Project
+14 verbose os Linux 6.1.158-180.294.amzn2023.x86_64
+15 verbose node v24.12.0
+16 verbose npm  v11.6.2
+17 verbose exit 0
+18 info ok
