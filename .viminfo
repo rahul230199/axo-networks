@@ -14,10 +14,12 @@
 $
 
 # Command Line History (newest to oldest):
-:q!
-|2,0,1767452391,,"q!"
 :wq!
-|2,0,1767452389,,"wq!"
+|2,0,1769583109,,"wq!"
+:q!
+|2,0,1769571205,,"q!"
+:q1!
+|2,0,1768794687,,"q1!"
 :wq!\
 |2,0,1767452387,,"wq!\\"
 :q
@@ -37,803 +39,646 @@ $
 
 # Registers:
 ""1	LINE	0
-	              <div class="feature-bullet">✓</div>
-	              <div>Risk signals built from real orders, not only balance‑sheet snapshots.</div>
-	            </div>
-	            <div class="feature-item">
-	              <div class="feature-bullet">✓</div>
-	              <div>Pipeline visibility into India’s EV manufacturing growth story.</div>
-	            </div>
-	          </div>
-	          <p class="band-cta" style="margin-top:1.9rem;">
-	            <a href="#contact">Talk to us →</a>
-	          </p>
-	        </div>
-	        <div class="finance-img" aria-hidden="true"></div>
-	      </div>
-	    </div>
-	  </section>
+	require("dotenv").config();
+	const express = require("express");
+	const { Pool } = require("pg");
 	
-	  <!-- Evolution -->
-	  <section class="evolution fade-section">
-	    <div class="evolution-inner">
-	      <div class="container" style="max-width:1040px;">
-	        <h2 class="evolution-title serif">The Evolution of Sourcing</h2>
-	        <p class="evolution-sub">From fragmentation to a unified ecosystem.</p>
+	const app = express();
+	const PORT = process.env.PORT || 3000;
 	
-	        <div class="evolution-grid">
-	          <div>
-	            <div class="evo-card-label evo-label-light serif">01</div>
-	            <div class="evo-card-title serif">The Old Way</div>
-	            <p class="evo-card-body">
-	              Fragmented discovery. Reliance on word‑of‑mouth. Lengthy verification cycles. Opaque capabilities.
-	            </p>
-	          </div>
+	// ============================================
+	// PostgreSQL Connection
+	// ============================================
+	const pool = new Pool({
+	  host: process.env.PGHOST || 'localhost',
+	  database: process.env.PGDATABASE || 'axo_networks',
+	  user: process.env.PGUSER || 'postgres',
+	  password: process.env.PGPASSWORD || '',
+	  port: process.env.PGPORT || 5432,
+	  max: 20,
+	  idleTimeoutMillis: 30000,
+	  connectionTimeoutMillis: 2000,
+	});
 	
-	          <div>
-	            <div class="evo-card-label evo-label-dark">
-	              <span style="font-size:1.6rem;color:#f97316;">⚡</span>
-	            </div>
-	            <div class="evo-card-title serif">The Catalyst</div>
-	            <p class="evo-card-body">
-	              AXO digitises the vetting process, standardising data and creating a common language for quality, reliability and growth.
-	            </p>
-	          </div>
+	// Test PostgreSQL connection
+	console.log("🔌 Connecting to PostgreSQL...");
+	pool.query('SELECT NOW()', (err, res) => {
+	  if (err) {
+	    console.error("❌ PostgreSQL connection error:", err.message);
+	  } else {
+	    console.log("✅ PostgreSQL connected at:", res.rows[0].now);
+	  }
+	});
 	
-	          <div>
-	            <div class="evo-card-label evo-label-light serif">03</div>
-	            <div class="evo-card-title serif">The Future</div>
-	            <p class="evo-card-body">
-	              A fluid, responsive ecosystem where capacity, capital and demand meet in real time. Less friction. More trust.
-	            </p>
-	          </div>
-|3,1,1,1,50,0,1767430952,"              <div class=\"feature-bullet\">✓</div>","              <div>Risk signals built from real orders, not only balance‑sheet snapshots.</div>","            </div>","            <div class=\"feature-item\">","              <div class=\"feature-bullet\">✓</div>","              <div>Pipeline visibility into India’s EV manufacturing growth story.</div>","            </div>","          </div>",>63
-|<"          <p class=\"band-cta\" style=\"margin-top:1.9rem;\">","            <a href=\"#contact\">Talk to us →</a>","          </p>","        </div>","        <div class=\"finance-img\" aria-hidden=\"true\"></div>","      </div>","    </div>","  </section>","","  <!-- Evolution -->","  <section class=\"evolution fade-section\">","    <div class=\"evolution-inner\">","      <div class=\"container\" style=\"max-width:1040px;\">",>76
-|<"        <h2 class=\"evolution-title serif\">The Evolution of Sourcing</h2>","        <p class=\"evolution-sub\">From fragmentation to a unified ecosystem.</p>","","        <div class=\"evolution-grid\">","          <div>","            <div class=\"evo-card-label evo-label-light serif\">01</div>","            <div class=\"evo-card-title serif\">The Old Way</div>","            <p class=\"evo-card-body\">",>118
-|<"              Fragmented discovery. Reliance on word‑of‑mouth. Lengthy verification cycles. Opaque capabilities.","            </p>","          </div>","","          <div>","            <div class=\"evo-card-label evo-label-dark\">","              <span style=\"font-size:1.6rem;color:#f97316;\">⚡</span>","            </div>","            <div class=\"evo-card-title serif\">The Catalyst</div>","            <p class=\"evo-card-body\">",>137
-|<"              AXO digitises the vetting process, standardising data and creating a common language for quality, reliability and growth.","            </p>","          </div>","","          <div>","            <div class=\"evo-card-label evo-label-light serif\">03</div>","            <div class=\"evo-card-title serif\">The Future</div>","            <p class=\"evo-card-body\">",>126
-|<"              A fluid, responsive ecosystem where capacity, capital and demand meet in real time. Less friction. More trust.","            </p>","          </div>"
+	// ============================================
+	// MIDDLEWARE
+	// ============================================
+	app.use(express.json());
+	
+	// CORS middleware
+	app.use((req, res, next) => {
+	  res.header("Access-Control-Allow-Origin", "*");
+	  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+	  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+	  if (req.method === "OPTIONS") return res.sendStatus(200);
+	  next();
+	});
+	
+	// ============================================
+	// CREATE TABLES IF NOT EXISTS
+	// ============================================
+	async function initializeDatabase() {
+	  try {
+|3,1,1,1,50,0,1769577411,"require(\"dotenv\").config();","const express = require(\"express\");","const { Pool } = require(\"pg\");","","const app = express();","const PORT = process.env.PORT || 3000;","","// ============================================","// PostgreSQL Connection","// ============================================","const pool = new Pool({","  host: process.env.PGHOST || 'localhost',","  database: process.env.PGDATABASE || 'axo_networks',",>43
+|<"  user: process.env.PGUSER || 'postgres',","  password: process.env.PGPASSWORD || '',","  port: process.env.PGPORT || 5432,","  max: 20,","  idleTimeoutMillis: 30000,","  connectionTimeoutMillis: 2000,","});","","// Test PostgreSQL connection","console.log(\"🔌 Connecting to PostgreSQL...\");","pool.query('SELECT NOW()', (err, res) => {","  if (err) {","    console.error(\"❌ PostgreSQL connection error:\", err.message);","  } else {",>69
+|<"    console.log(\"✅ PostgreSQL connected at:\", res.rows[0].now);","  }","});","","// ============================================","// MIDDLEWARE","// ============================================","app.use(express.json());","","// CORS middleware","app.use((req, res, next) => {","  res.header(\"Access-Control-Allow-Origin\", \"*\");","  res.header(\"Access-Control-Allow-Methods\", \"GET, POST, PUT, DELETE, OPTIONS\");",>82
+|<"  res.header(\"Access-Control-Allow-Headers\", \"Content-Type, Authorization\");","  if (req.method === \"OPTIONS\") return res.sendStatus(200);","  next();","});","","// ============================================","// CREATE TABLES IF NOT EXISTS","// ============================================","async function initializeDatabase() {","  try {"
 "2	LINE	0
-	
-	    .not-market {
-	      min-height:100vh;
-	      align-items:center;
-	      background:#ffffff;
-	    }
-	    .not-market-inner {
-	      padding:3rem 0;
-	      text-align:center;
-	    }
-	
-	    @media(max-width:900px){
-	      .finance-grid{grid-template-columns:minmax(0,1fr);}
-	      .vision-grid{grid-template-columns:minmax(0,1fr);}
-	      .split{grid-template-columns:minmax(0,1fr);}
-	      .evolution-grid{grid-template-columns:minmax(0,1fr);}
-	      .supplier-grid{grid-template-columns:minmax(0,1fr);}
-	      .supplier-quote{position:static;margin-top:1rem;right:auto;bottom:auto;}
-	    }
-	
-	    /* Final CTA */
-	
-	    .final-cta {
-	      min-height:100vh;
-	      align-items:center;
-	      background: radial-gradient(circle at top,#1f2937,#020617 55%,#020617 100%);
-	      color:#f9fafb;
-	    }
-	    .final-cta-inner {
-	      padding:3rem 0;
-	      text-align:center;
-	    }
-	    .final-cta h2 {
-	      font-size: 2.4rem;
-	      line-height: 1.16;
-	      margin-bottom: 2.1rem;
-	    }
-	    .final-cta-buttons {
-	      display: inline-flex;
-	      flex-wrap: wrap;
-	      justify-content: center;
-	      gap: 1.1rem;
-	    }
-	
-	    /* Footer */
-	
-	    footer {
-	      background: #020617;
-	      color: #d5d5d5;
-	      padding: 1.8rem 0 1.8rem;
-|3,0,2,1,50,0,1767430950,"","    .not-market {","      min-height:100vh;","      align-items:center;","      background:#ffffff;","    }","    .not-market-inner {","      padding:3rem 0;","      text-align:center;","    }","","    @media(max-width:900px){","      .finance-grid{grid-template-columns:minmax(0,1fr);}","      .vision-grid{grid-template-columns:minmax(0,1fr);}","      .split{grid-template-columns:minmax(0,1fr);}",>61
-|<"      .evolution-grid{grid-template-columns:minmax(0,1fr);}","      .supplier-grid{grid-template-columns:minmax(0,1fr);}","      .supplier-quote{position:static;margin-top:1rem;right:auto;bottom:auto;}","    }","","    /* Final CTA */","","    .final-cta {","      min-height:100vh;","      align-items:center;","      background: radial-gradient(circle at top,#1f2937,#020617 55%,#020617 100%);","      color:#f9fafb;","    }","    .final-cta-inner {","      padding:3rem 0;",>26
-|<"      text-align:center;","    }","    .final-cta h2 {","      font-size: 2.4rem;","      line-height: 1.16;","      margin-bottom: 2.1rem;","    }","    .final-cta-buttons {","      display: inline-flex;","      flex-wrap: wrap;","      justify-content: center;","      gap: 1.1rem;","    }","","    /* Footer */","","    footer {","      background: #020617;","      color: #d5d5d5;","      padding: 1.8rem 0 1.8rem;"
+	    res.json({ success: true, data: result.rows[0] });
+	  } catch (err) {
+	    console.error(err);
+	    res.status(500).json({ success: false, error: err.message });
+	  }
+|3,0,2,1,5,0,1769574992,"    res.json({ success: true, data: result.rows[0] });","  } catch (err) {","    console.error(err);","    res.status(500).json({ success: false, error: err.message });","  }"
 "3	LINE	0
-	      color: #4b5563;
-	      background:#ffffff;
-	    }
-	    .chip-icon {
-	      width: 18px;
-	      height: 18px;
-	      border-radius: 999px;
-	      border: 1px solid rgba(17,24,39,0.35);
-	      display: flex;
-	      align-items: center;
-	      justify-content: center;
-	      font-size: 0.7rem;
-	    }
-	    .section-title-xl {
-	      font-size: clamp(2.2rem, 3.3vw, 2.7rem);
-	      line-height: 1.1;
-	      margin-bottom: 1.1rem;
-	    }
-	    .section-body {
-	      font-size: 0.98rem;
-	      color: #4b5563;
-	      max-width: 520px;
-	    }
-	    .feature-list {
-	      margin-top: 1.6rem;
-	      display: grid;
-	      gap: 0.7rem;
-	      color: var(--text-main);
-	    }
-	    .feature-item {
-	      display: flex;
-	      align-items: flex-start;
-	      gap: 0.7rem;
-	      font-size: 0.95rem;
-	    }
-	    .feature-bullet {
-	      width: 20px;
-	      height: 20px;
-	      border-radius: 999px;
-	      border: 1px solid rgba(107,114,128,0.6);
-	      display: flex;
-	      align-items: center;
-	      justify-content: center;
-	      font-size: 0.8rem;
+	
+	    if (!result.rows.length) {
+	      return res.status(404).json({ success: false, error: "Not found" });
 	    }
 	
-	    /* OEMs */
-	
-	    .band-dark {
-	      min-height:100vh;
-|3,0,3,1,50,0,1767430948,"      color: #4b5563;","      background:#ffffff;","    }","    .chip-icon {","      width: 18px;","      height: 18px;","      border-radius: 999px;","      border: 1px solid rgba(17,24,39,0.35);","      display: flex;","      align-items: center;","      justify-content: center;","      font-size: 0.7rem;","    }","    .section-title-xl {","      font-size: clamp(2.2rem, 3.3vw, 2.7rem);","      line-height: 1.1;",>30
-|<"      margin-bottom: 1.1rem;","    }","    .section-body {","      font-size: 0.98rem;","      color: #4b5563;","      max-width: 520px;","    }","    .feature-list {","      margin-top: 1.6rem;","      display: grid;","      gap: 0.7rem;","      color: var(--text-main);","    }","    .feature-item {","      display: flex;","      align-items: flex-start;","      gap: 0.7rem;","      font-size: 0.95rem;","    }","    .feature-bullet {","      width: 20px;","      height: 20px;",>29
-|<"      border-radius: 999px;","      border: 1px solid rgba(107,114,128,0.6);","      display: flex;","      align-items: center;","      justify-content: center;","      font-size: 0.8rem;","    }","","    /* OEMs */","","    .band-dark {","      min-height:100vh;"
+|3,0,3,1,5,0,1769574988,"","    if (!result.rows.length) {","      return res.status(404).json({ success: false, error: \"Not found\" });","    }",""
 "4	LINE	0
+	       SET status = $1
+	       WHERE id = $2
+	       RETURNING id, status`,
+	      [status, req.params.id]
+	    );
+|3,0,4,1,5,0,1769574986,"       SET status = $1","       WHERE id = $2","       RETURNING id, status`,","      [status, req.params.id]","    );"
+"5	LINE	0
+	  }
+	
+	  try {
+	    const result = await pool.query(
+	      `UPDATE network_access_requests
+|3,0,5,1,5,0,1769574983,"  }","","  try {","    const result = await pool.query(","      `UPDATE network_access_requests"
+"6	LINE	0
+	app.put("/api/network-request/:id/status", async (req, res) => {
+	  const { status } = req.body;
+	
+	  if (!["pending", "verified", "rejected"].includes(status)) {
+	    return res.status(400).json({ success: false, error: "Invalid status" });
+|3,0,6,1,5,0,1769574981,"app.put(\"/api/network-request/:id/status\", async (req, res) => {","  const { status } = req.body;","","  if (![\"pending\", \"verified\", \"rejected\"].includes(status)) {","    return res.status(400).json({ success: false, error: \"Invalid status\" });"
+"7	LINE	0
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	    <meta charset="UTF-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>AXO Networks - Admin Dashboard</title>
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,300;0,400;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+	    <style>
+	        /* CSS Reset & Base Styles */
+	        * {
+	            margin: 0;
+	            padding: 0;
+	            box-sizing: border-box;
+	        }
+	
+	        :root {
+	            --primary: #1E3A8A;
+	            --primary-light: #3B82F6;
+	            --primary-dark: #1E40AF;
+	            --success: #10B981;
+	            --warning: #F59E0B;
+	            --danger: #EF4444;
+	            --foreground: #111827;
+	            --foreground-light: #374151;
+	            --background: #FFFFFF;
+	            --light-grey: #F9FAFB;
+	            --grey: #E5E7EB;
+	            --dark-grey: #6B7280;
+	            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+	        }
+	
+	        body {
+	            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+	            color: var(--foreground);
+	            background-color: var(--light-grey);
+	            line-height: 1.6;
+	            overflow-x: hidden;
+	            min-height: 100vh;
+	        }
+	
+	        h1, h2, h3, h4, h5, h6 {
+	            font-family: 'Nunito Sans', sans-serif;
+	            font-weight: 800;
+	            line-height: 1.15;
+	            margin-bottom: 1.25rem;
+	            letter-spacing: -0.01em;
+	        }
+	
+	        .container {
+|3,0,7,1,50,0,1769572219,"<!DOCTYPE html>","<html lang=\"en\">","<head>","    <meta charset=\"UTF-8\">","    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">","    <title>AXO Networks - Admin Dashboard</title>","    <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css\">",>164
+|<"    <link href=\"https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,300;0,400;0,600;0,700;0,800;0,900;1,400&display=swap\" rel=\"stylesheet\">","    <style>","        /* CSS Reset & Base Styles */","        * {","            margin: 0;","            padding: 0;","            box-sizing: border-box;","        }","","        :root {","            --primary: #1E3A8A;","            --primary-light: #3B82F6;","            --primary-dark: #1E40AF;",>33
+|<"            --success: #10B981;","            --warning: #F59E0B;","            --danger: #EF4444;","            --foreground: #111827;","            --foreground-light: #374151;","            --background: #FFFFFF;","            --light-grey: #F9FAFB;","            --grey: #E5E7EB;","            --dark-grey: #6B7280;","            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);","        }","","        body {",>88
+|<"            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;","            color: var(--foreground);","            background-color: var(--light-grey);","            line-height: 1.6;","            overflow-x: hidden;","            min-height: 100vh;","        }","","        h1, h2, h3, h4, h5, h6 {","            font-family: 'Nunito Sans', sans-serif;","            font-weight: 800;","            line-height: 1.15;","            margin-bottom: 1.25rem;",>38
+|<"            letter-spacing: -0.01em;","        }","","        .container {"
+"8	LINE	0
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
 	  <meta charset="UTF-8" />
-	  <title>EV Sourcing Platform</title>
-	  <meta name="viewport" content="width=device-width, initial-scale=1" />
-	  <style>
-	    :root {
-	      --bg-page: #020617;
-	      --bg-light: #f9fafb;
-	      --bg-muted: #111827;
-	      --bg-dark: #020617;
-	      --accent-strong: #ffffff;
-	      --text-main: #111111;
-	      --text-soft: #4b5563;
-	      --text-on-dark: #f9f9f9;
-	      --border-subtle: #d1d5db;
-	    }
+	  <title>AXO Admin Dashboard</title>
+	  <link rel="stylesheet" href="../styles/admin-dashboard.css" />
+	</head>
+	<body>
 	
-	    * { box-sizing: border-box; margin: 0; padding: 0; }
-	    body {
-	      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	      background: var(--bg-page);
-	      color: var(--text-main);
-	      line-height: 1.5;
-	      scroll-snap-type: y mandatory;
-	      scroll-behavior: smooth;
-	    }
+	  <h1>AXO Networks – Admin Dashboard</h1>
 	
-	    section {
-	      scroll-snap-align: start;
-	      display: grid;
-	      grid-template-columns: minmax(0, 1180px);
-	      justify-content: center;
-	    }
+	  <table>
+	    <thead>
+	      <tr>
+	        <th>ID</th>
+	        <th>Company</th>
+	        <th>Contact</th>
+	        <th>Email</th>
+	        <th>Status</th>
+	        <th>Submitted</th>
+	        <th>Actions</th>
+	      </tr>
+	    </thead>
+	    <tbody id="tableBody">
+	      <tr><td colspan="7">Loading...</td></tr>
+	    </tbody>
+	  </table>
 	
-	    .serif { font-family: "Georgia", "Times New Roman", serif; letter-spacing: 0.02em; }
-	    h1, h2, h3 { font-weight: 500; }
+	  <script src="../js/admin-dashboard.js"></script>
+	</body>
+	</html>
 	
-	    .container {
-	      width: 100%;
-	      padding: 0 2rem;
-	      margin: 0 auto;
-	    }
-	    @media (max-width: 768px) {
-	      .container { padding: 0 1.25rem; }
-	    }
+|3,0,8,1,32,0,1769571779,"<!DOCTYPE html>","<html lang=\"en\">","<head>","  <meta charset=\"UTF-8\" />","  <title>AXO Admin Dashboard</title>","  <link rel=\"stylesheet\" href=\"../styles/admin-dashboard.css\" />","</head>","<body>","","  <h1>AXO Networks – Admin Dashboard</h1>","","  <table>","    <thead>","      <tr>","        <th>ID</th>","        <th>Company</th>","        <th>Contact</th>","        <th>Email</th>","        <th>Status</th>",>28
+|<"        <th>Submitted</th>","        <th>Actions</th>","      </tr>","    </thead>","    <tbody id=\"tableBody\">","      <tr><td colspan=\"7\">Loading...</td></tr>","    </tbody>","  </table>","","  <script src=\"../js/admin-dashboard.js\"></script>","</body>","</html>",""
+"9	LINE	0
+	const API = "http://localhost:3000/api";
+	const token = localStorage.getItem("authToken");
 	
-	    /* Header */
+	if (!token) location.href = "/login.html";
 	
-|3,0,4,1,50,0,1767430937,"<!DOCTYPE html>","<html lang=\"en\">","<head>","  <meta charset=\"UTF-8\" />","  <title>EV Sourcing Platform</title>","  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />","  <style>","    :root {","      --bg-page: #020617;","      --bg-light: #f9fafb;","      --bg-muted: #111827;","      --bg-dark: #020617;","      --accent-strong: #ffffff;","      --text-main: #111111;","      --text-soft: #4b5563;",>32
-|<"      --text-on-dark: #f9f9f9;","      --border-subtle: #d1d5db;","    }","","    * { box-sizing: border-box; margin: 0; padding: 0; }","    body {","      font-family: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;","      background: var(--bg-page);","      color: var(--text-main);","      line-height: 1.5;","      scroll-snap-type: y mandatory;","      scroll-behavior: smooth;","    }","","    section {","      scroll-snap-align: start;",>22
-|<"      display: grid;","      grid-template-columns: minmax(0, 1180px);","      justify-content: center;","    }","","    .serif { font-family: \"Georgia\", \"Times New Roman\", serif; letter-spacing: 0.02em; }","    h1, h2, h3 { font-weight: 500; }","","    .container {","      width: 100%;","      padding: 0 2rem;","      margin: 0 auto;","    }","    @media (max-width: 768px) {","      .container { padding: 0 1.25rem; }","    }","","    /* Header */",""
-"5	LINE	0
-	require("dotenv").config();
+	async function loadRequests() {
+	  const res = await fetch(`${API}/network-request`);
+	  const json = await res.json();
 	
-	const express = require("express");
-	const app = express();
+	  const data = json.data || [];
+	  const tbody = document.getElementById("tableBody");
+	  tbody.innerHTML = "";
 	
-	app.use(express.json());
+	  document.getElementById("total").textContent = data.length;
+	  document.getElementById("pending").textContent =
+	    data.filter(r => r.status === "pending").length;
+	  document.getElementById("verified").textContent =
+	    data.filter(r => r.status === "verified").length;
+	  document.getElementById("rejected").textContent =
+	    data.filter(r => r.status === "rejected").length;
 	
-	/* 🔐 AUTH ROUTE – INLINE TEST */
-	app.post("/api/auth/login", (req, res) => {
-	  res.json({ ok: true });
-	});
+	  data.forEach(r => {
+	    const tr = document.createElement("tr");
 	
-	/* 🔍 HEALTH */
-	app.get("/api/_health", (req, res) => {
-	  res.json({ status: "up" });
-	});
-	
-	const PORT = 3000;
-	app.listen(PORT, () => {
-	  console.log("🚀 TEST SERVER RUNNING ON", PORT);
-	});
-	
-|3,0,5,1,22,0,1767429103,"require(\"dotenv\").config();","","const express = require(\"express\");","const app = express();","","app.use(express.json());","","/* 🔐 AUTH ROUTE – INLINE TEST */","app.post(\"/api/auth/login\", (req, res) => {","  res.json({ ok: true });","});","","/* 🔍 HEALTH */","app.get(\"/api/_health\", (req, res) => {","  res.json({ status: \"up\" });","});","","const PORT = 3000;","app.listen(PORT, () => {",>55
-|<"  console.log(\"🚀 TEST SERVER RUNNING ON\", PORT);","});",""
-"6	LINE	0
-	/*************************************************
-	 * AXO NETWORKS – FINAL SERVER (FIXED ORDER)
-	 *************************************************/
-	
-	require("dotenv").config();
-	
-	const express = require("express");
-	const mongoose = require("mongoose");
-	const path = require("path");
-	
-	/* ---------------- APP INIT ---------------- */
-	const app = express();
-	const PORT = process.env.PORT || 3000;
-	
-	/* ---------------- MIDDLEWARE ---------------- */
-	app.use(express.json());
-	app.use(express.urlencoded({ extended: true }));
-	app.use(express.static(path.join(__dirname, "public")));
-	
-	/* ---------------- AUTH ROUTES ---------------- */
-	const authRoutes = require("./routes/auth.routes");
-	
-	console.log("🔎 typeof authRoutes =", typeof authRoutes);
-	console.log("🔎 authRoutes keys =", Object.keys(authRoutes || {}));
-	
-	app.use("/api/auth", authRoutes);
-	
-	/* ---------------- MONGODB ---------------- */
-	mongoose
-	  .connect(process.env.MONGODB_URI)
-	  .then(() => console.log("✅ MongoDB connected"))
-	  .catch((err) => {
-	    console.error("❌ MongoDB connection error:", err.message);
-	    process.exit(1);
+	    tr.innerHTML = `
+	      <td>${r.id}</td>
+	      <td>${r.company_name}</td>
+	      <td>${r.contact_name}</td>
+	      <td>${r.email}</td>
+	      <td class="status-${r.status}">${r.status}</td>
+	      <td>${new Date(r.submission_timestamp).toLocaleString()}</td>
+	      <td>
+	        ${r.status === "pending" ? `
+	          <button onclick="approve(${r.id})">Approve</button>
+	          <button onclick="rejectReq(${r.id})">Reject</button>
+	        ` : "-"}
+	      </td>
+	    `;
+	    tbody.appendChild(tr);
 	  });
-	
-	/* ---------------- MODELS ---------------- */
-	require("./models/User");
-	
-	const Supplier =
-	  mongoose.models.Supplier ||
-	  mongoose.model(
-	    "Supplier",
-	    new mongoose.Schema({
-	      companyName: String,
-	      contactPerson: String,
-	      email: String,
-	      location: String,
-	      components: String,
-	      createdAt: { type: Date, default: Date.now }
-|3,0,6,1,50,0,1767428973,"/*************************************************"," * AXO NETWORKS – FINAL SERVER (FIXED ORDER)"," *************************************************/","","require(\"dotenv\").config();","","const express = require(\"express\");","const mongoose = require(\"mongoose\");","const path = require(\"path\");","","/* ---------------- APP INIT ---------------- */","const app = express();","const PORT = process.env.PORT || 3000;","",>52
-|<"/* ---------------- MIDDLEWARE ---------------- */","app.use(express.json());","app.use(express.urlencoded({ extended: true }));","app.use(express.static(path.join(__dirname, \"public\")));","","/* ---------------- AUTH ROUTES ---------------- */","const authRoutes = require(\"./routes/auth.routes\");","","console.log(\"🔎 typeof authRoutes =\", typeof authRoutes);","console.log(\"🔎 authRoutes keys =\", Object.keys(authRoutes || {}));","","app.use(\"/api/auth\", authRoutes);","",>49
-|<"/* ---------------- MONGODB ---------------- */","mongoose","  .connect(process.env.MONGODB_URI)","  .then(() => console.log(\"✅ MongoDB connected\"))","  .catch((err) => {","    console.error(\"❌ MongoDB connection error:\", err.message);","    process.exit(1);","  });","","/* ---------------- MODELS ---------------- */","require(\"./models/User\");","","const Supplier =","  mongoose.models.Supplier ||","  mongoose.model(","    \"Supplier\",","    new mongoose.Schema({",>28
-|<"      companyName: String,","      contactPerson: String,","      email: String,","      location: String,","      components: String,","      createdAt: { type: Date, default: Date.now }"
-"7	LINE	0
-	/* ---------------- AUTH ROUTES ---------------- */
-	const authRoutes = require("./routes/auth.routes");
-	
-	console.log("🔎 typeof authRoutes =", typeof authRoutes);
-	console.log("🔎 authRoutes keys =", Object.keys(authRoutes || {}));
-	
-	if (typeof authRoutes !== "function") {
-	  console.error("❌ auth.routes.js did NOT export a router");
-	  process.exit(1);
 	}
 	
-	app.use("/api/auth", authRoutes);
+	async function approve(id) {
+	  const role = prompt("Role: supplier / manufacturer / both");
+	  if (!role) return;
 	
-|3,0,7,1,13,0,1767428862,"/* ---------------- AUTH ROUTES ---------------- */","const authRoutes = require(\"./routes/auth.routes\");","","console.log(\"🔎 typeof authRoutes =\", typeof authRoutes);","console.log(\"🔎 authRoutes keys =\", Object.keys(authRoutes || {}));","","if (typeof authRoutes !== \"function\") {","  console.error(\"❌ auth.routes.js did NOT export a router\");","  process.exit(1);","}","","app.use(\"/api/auth\", authRoutes);",""
-"8	LINE	0
-	/*************************************************
-	 * AXO NETWORKS – MAIN SERVER
-	 *************************************************/
-	
-	require("dotenv").config();
-	
-	const express = require("express");
-	const mongoose = require("mongoose");
-	const path = require("path");
-	
-	const app = express();
-	const PORT = process.env.PORT || 3000;
-	
-	/* ---------------- MIDDLEWARE ---------------- */
-	app.use(express.json());
-	app.use(express.urlencoded({ extended: true }));
-	app.use(express.static(path.join(__dirname, "public")));
-	
-	/* ---------------- MONGODB ---------------- */
-	mongoose
-	  .connect(process.env.MONGODB_URI)
-	  .then(() => {
-	    console.log("✅ MongoDB connected");
-	  })
-	  .catch((err) => {
-	    console.error("❌ MongoDB connection error:", err.message);
-	    process.exit(1);
-	  });
-	
-	/* ---------------- MODELS ---------------- */
-	/**
-	 * IMPORTANT:
-	 * Models must be loaded ONCE.
-	 * Never redefine schemas in routes.
-	 */
-	
-	// User (Auth)
-	require("./models/User");
-	
-	// Supplier
-	const Supplier =
-	  mongoose.models.Supplier ||
-	  mongoose.model(
-	    "Supplier",
-	    new mongoose.Schema({
-	      companyName: String,
-	      contactPerson: String,
-	      email: String,
-	      location: String,
-	      components: String,
-|3,0,8,1,50,0,1767428784,"/*************************************************"," * AXO NETWORKS – MAIN SERVER"," *************************************************/","","require(\"dotenv\").config();","","const express = require(\"express\");","const mongoose = require(\"mongoose\");","const path = require(\"path\");","","const app = express();","const PORT = process.env.PORT || 3000;","","/* ---------------- MIDDLEWARE ---------------- */",>26
-|<"app.use(express.json());","app.use(express.urlencoded({ extended: true }));","app.use(express.static(path.join(__dirname, \"public\")));","","/* ---------------- MONGODB ---------------- */","mongoose","  .connect(process.env.MONGODB_URI)","  .then(() => {","    console.log(\"✅ MongoDB connected\");","  })","  .catch((err) => {","    console.error(\"❌ MongoDB connection error:\", err.message);","    process.exit(1);","  });","","/* ---------------- MODELS ---------------- */",>5
-|<"/**"," * IMPORTANT:"," * Models must be loaded ONCE."," * Never redefine schemas in routes."," */","","// User (Auth)","require(\"./models/User\");","","// Supplier","const Supplier =","  mongoose.models.Supplier ||","  mongoose.model(","    \"Supplier\",","    new mongoose.Schema({","      companyName: String,","      contactPerson: String,","      email: String,","      location: String,","      components: String,"
-"9	LINE	0
-	require("dotenv").config();
-	const express = require("express");
-	const mongoose = require("mongoose");
-	const path = require("path");
-	
-	const app = express();
-	const PORT = process.env.PORT || 3000;
-	
-	/* ---------------- MIDDLEWARE ---------------- */
-	app.use(express.json());
-	app.use(express.urlencoded({ extended: true }));
-	app.use(express.static(path.join(__dirname, "public")));
-	
-	/* ---------------- MONGODB ---------------- */
-	mongoose
-	  .connect(process.env.MONGODB_URI)
-	  .then(() => console.log("✅ MongoDB connected"))
-	  .catch((err) => {
-	    console.error("❌ MongoDB connection error:", err.message);
-	    process.exit(1);
-	  });
-	
-	/* ---------------- MODELS ---------------- */
-	require("./models/User"); // ensure User model is registered
-	
-	const Supplier = mongoose.model(
-	  "Supplier",
-	  new mongoose.Schema({
-	    companyName: String,
-	    contactPerson: String,
-	    email: String,
-	    location: String,
-	    components: String,
-	    createdAt: { type: Date, default: Date.now }
-	  })
-	);
-	
-	const OEM = mongoose.model(
-	  "OEM",
-	  new mongoose.Schema({
-	    companyName: String,
-	    contactPerson: String,
-	    email: String,
-	    website: String,
-	    programContext: String,
-	    componentsNeeded: String,
-	    volume: String,
-	    regions: String,
-	    createdAt: { type: Date, default: Date.now }
-	  })
-|3,0,9,1,50,0,1767428597,"require(\"dotenv\").config();","const express = require(\"express\");","const mongoose = require(\"mongoose\");","const path = require(\"path\");","","const app = express();","const PORT = process.env.PORT || 3000;","","/* ---------------- MIDDLEWARE ---------------- */","app.use(express.json());","app.use(express.urlencoded({ extended: true }));","app.use(express.static(path.join(__dirname, \"public\")));","",>49
-|<"/* ---------------- MONGODB ---------------- */","mongoose","  .connect(process.env.MONGODB_URI)","  .then(() => console.log(\"✅ MongoDB connected\"))","  .catch((err) => {","    console.error(\"❌ MongoDB connection error:\", err.message);","    process.exit(1);","  });","","/* ---------------- MODELS ---------------- */","require(\"./models/User\"); // ensure User model is registered","","const Supplier = mongoose.model(","  \"Supplier\",","  new mongoose.Schema({",>26
-|<"    companyName: String,","    contactPerson: String,","    email: String,","    location: String,","    components: String,","    createdAt: { type: Date, default: Date.now }","  })",");","","const OEM = mongoose.model(","  \"OEM\",","  new mongoose.Schema({","    companyName: String,","    contactPerson: String,","    email: String,","    website: String,","    programContext: String,","    componentsNeeded: String,","    volume: String,","    regions: String,",>50
-|<"    createdAt: { type: Date, default: Date.now }","  })"
+	  const res = await fetch(`${API}/admin/approve/${id}`, {
+	    method: "POST",
+	    headers: {
+	      "Content-Type": "application/json",
+|3,0,9,1,50,0,1769571230,"const API = \"http://localhost:3000/api\";","const token = localStorage.getItem(\"authToken\");","","if (!token) location.href = \"/login.html\";","","async function loadRequests() {","  const res = await fetch(`${API}/network-request`);","  const json = await res.json();","","  const data = json.data || [];","  const tbody = document.getElementById(\"tableBody\");","  tbody.innerHTML = \"\";","",>65
+|<"  document.getElementById(\"total\").textContent = data.length;","  document.getElementById(\"pending\").textContent =","    data.filter(r => r.status === \"pending\").length;","  document.getElementById(\"verified\").textContent =","    data.filter(r => r.status === \"verified\").length;","  document.getElementById(\"rejected\").textContent =","    data.filter(r => r.status === \"rejected\").length;","","  data.forEach(r => {","    const tr = document.createElement(\"tr\");","",>22
+|<"    tr.innerHTML = `","      <td>${r.id}</td>","      <td>${r.company_name}</td>","      <td>${r.contact_name}</td>","      <td>${r.email}</td>","      <td class=\"status-${r.status}\">${r.status}</td>","      <td>${new Date(r.submission_timestamp).toLocaleString()}</td>","      <td>","        ${r.status === \"pending\" ? `","          <button onclick=\"approve(${r.id})\">Approve</button>","          <button onclick=\"rejectReq(${r.id})\">Reject</button>","        ` : \"-\"}",>13
+|<"      </td>","    `;","    tbody.appendChild(tr);","  });","}","","async function approve(id) {","  const role = prompt(\"Role: supplier / manufacturer / both\");","  if (!role) return;","","  const res = await fetch(`${API}/admin/approve/${id}`, {","    method: \"POST\",","    headers: {","      \"Content-Type\": \"application/json\","
 "-	CHAR	0
-	"
-|3,0,36,0,1,0,1767420571,"\""
+	b
+|3,0,36,0,1,0,1768483190,"b"
 
 # File marks:
-'0  722  0  /usr/share/nginx/html/index.html
-|4,48,722,0,1767452391,"/usr/share/nginx/html/index.html"
-'1  16  2  ~/AXO-Project/server.js
-|4,49,16,2,1767431715,"~/AXO-Project/server.js"
-'2  778  8  /usr/share/nginx/html/index.html.bkp
-|4,50,778,8,1767431624,"/usr/share/nginx/html/index.html.bkp"
-'3  1  0  /usr/share/nginx/html/index.html.bkp
-|4,51,1,0,1767431068,"/usr/share/nginx/html/index.html.bkp"
-'4  1  0  /usr/share/nginx/html/index.html.bkp
-|4,52,1,0,1767431068,"/usr/share/nginx/html/index.html.bkp"
-'5  326  0  /usr/share/nginx/html/index.html
-|4,53,326,0,1767430959,"/usr/share/nginx/html/index.html"
-'6  326  0  /usr/share/nginx/html/index.html
-|4,54,326,0,1767430959,"/usr/share/nginx/html/index.html"
-'7  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,55,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
-'8  29  0  ~/AXO-Project/public/auth.js
-|4,56,29,0,1767429741,"~/AXO-Project/public/auth.js"
-'9  25  0  /usr/share/nginx/html/login.html
-|4,57,25,0,1767429689,"/usr/share/nginx/html/login.html"
+'0  3  41  ~/AXO-Project/server.js
+|4,48,3,41,1769583109,"~/AXO-Project/server.js"
+'1  228  0  ~/AXO-Project/server.js
+|4,49,228,0,1769577413,"~/AXO-Project/server.js"
+'2  228  0  ~/AXO-Project/server.js
+|4,50,228,0,1769577413,"~/AXO-Project/server.js"
+'3  118  0  ~/AXO-Project/server-1.js
+|4,51,118,0,1769575003,"~/AXO-Project/server-1.js"
+'4  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,52,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+'5  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,53,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+'6  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,54,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+'7  15  0  ~/AXO-Project/public/admin-dashboard.html
+|4,55,15,0,1769571813,"~/AXO-Project/public/admin-dashboard.html"
+'8  41  0  ~/AXO-Project/styles/admin-dashboard.css
+|4,56,41,0,1769571263,"~/AXO-Project/styles/admin-dashboard.css"
+'9  59  0  ~/AXO-Project/js/admin-dashboard.js
+|4,57,59,0,1769571233,"~/AXO-Project/js/admin-dashboard.js"
 
 # Jumplist (newest first):
--'  722  0  /usr/share/nginx/html/index.html
-|4,39,722,0,1767452391,"/usr/share/nginx/html/index.html"
--'  326  0  /usr/share/nginx/html/index.html
-|4,39,326,0,1767452370,"/usr/share/nginx/html/index.html"
--'  16  2  ~/AXO-Project/server.js
-|4,39,16,2,1767431715,"~/AXO-Project/server.js"
--'  16  2  ~/AXO-Project/server.js
-|4,39,16,2,1767431715,"~/AXO-Project/server.js"
--'  778  8  /usr/share/nginx/html/index.html.bkp
-|4,39,778,8,1767431624,"/usr/share/nginx/html/index.html.bkp"
--'  778  8  /usr/share/nginx/html/index.html.bkp
-|4,39,778,8,1767431624,"/usr/share/nginx/html/index.html.bkp"
--'  1  0  /usr/share/nginx/html/index.html.bkp
-|4,39,1,0,1767431576,"/usr/share/nginx/html/index.html.bkp"
--'  1  0  /usr/share/nginx/html/index.html.bkp
-|4,39,1,0,1767431576,"/usr/share/nginx/html/index.html.bkp"
--'  1  0  /usr/share/nginx/html/index.html.bkp
-|4,39,1,0,1767431068,"/usr/share/nginx/html/index.html.bkp"
--'  1  0  /usr/share/nginx/html/index.html.bkp
-|4,39,1,0,1767431068,"/usr/share/nginx/html/index.html.bkp"
--'  326  0  /usr/share/nginx/html/index.html
-|4,39,326,0,1767430959,"/usr/share/nginx/html/index.html"
--'  326  0  /usr/share/nginx/html/index.html
-|4,39,326,0,1767430959,"/usr/share/nginx/html/index.html"
--'  326  0  /usr/share/nginx/html/index.html
-|4,39,326,0,1767430959,"/usr/share/nginx/html/index.html"
--'  326  0  /usr/share/nginx/html/index.html
-|4,39,326,0,1767430959,"/usr/share/nginx/html/index.html"
--'  1  0  /usr/share/nginx/html/index.html
-|4,39,1,0,1767430934,"/usr/share/nginx/html/index.html"
--'  1  0  /usr/share/nginx/html/index.html
-|4,39,1,0,1767430934,"/usr/share/nginx/html/index.html"
--'  1  0  /usr/share/nginx/html/index.html
-|4,39,1,0,1767430934,"/usr/share/nginx/html/index.html"
--'  1  0  /usr/share/nginx/html/index.html
-|4,39,1,0,1767430934,"/usr/share/nginx/html/index.html"
--'  1  0  /usr/share/nginx/html/index.html
-|4,39,1,0,1767430934,"/usr/share/nginx/html/index.html"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  21  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,21,0,1767429803,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  1  0  ~/AXO-Project/public/js/dashboard.js
-|4,39,1,0,1767429800,"~/AXO-Project/public/js/dashboard.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  29  0  ~/AXO-Project/public/auth.js
-|4,39,29,0,1767429741,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
--'  1  0  ~/AXO-Project/public/auth.js
-|4,39,1,0,1767429738,"~/AXO-Project/public/auth.js"
+-'  3  41  ~/AXO-Project/server.js
+|4,39,3,41,1769583109,"~/AXO-Project/server.js"
+-'  228  0  ~/AXO-Project/server.js
+|4,39,228,0,1769583072,"~/AXO-Project/server.js"
+-'  228  0  ~/AXO-Project/server.js
+|4,39,228,0,1769577413,"~/AXO-Project/server.js"
+-'  1  2  ~/AXO-Project/server.js
+|4,39,1,2,1769577404,"~/AXO-Project/server.js"
+-'  1  2  ~/AXO-Project/server.js
+|4,39,1,2,1769577404,"~/AXO-Project/server.js"
+-'  118  0  ~/AXO-Project/server-1.js
+|4,39,118,0,1769575003,"~/AXO-Project/server-1.js"
+-'  118  0  ~/AXO-Project/server-1.js
+|4,39,118,0,1769575003,"~/AXO-Project/server-1.js"
+-'  118  0  ~/AXO-Project/server-1.js
+|4,39,118,0,1769575003,"~/AXO-Project/server-1.js"
+-'  118  0  ~/AXO-Project/server-1.js
+|4,39,118,0,1769575003,"~/AXO-Project/server-1.js"
+-'  133  0  ~/AXO-Project/server-1.js
+|4,39,133,0,1769574937,"~/AXO-Project/server-1.js"
+-'  133  0  ~/AXO-Project/server-1.js
+|4,39,133,0,1769574937,"~/AXO-Project/server-1.js"
+-'  133  0  ~/AXO-Project/server-1.js
+|4,39,133,0,1769574937,"~/AXO-Project/server-1.js"
+-'  133  0  ~/AXO-Project/server-1.js
+|4,39,133,0,1769574937,"~/AXO-Project/server-1.js"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  562  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,562,0,1769572283,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  1  0  /usr/share/nginx/html/styles/admin-dashboard.css
+|4,39,1,0,1769572277,"/usr/share/nginx/html/styles/admin-dashboard.css"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  845  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,845,0,1769572231,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  1  0  /usr/share/nginx/html/admin-dashboard.html
+|4,39,1,0,1769572216,"/usr/share/nginx/html/admin-dashboard.html"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  562  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,562,0,1769571831,"~/AXO-Project/public/admin-dashboard.css"
+-'  1  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,1,0,1769571825,"~/AXO-Project/public/admin-dashboard.css"
+-'  1  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,1,0,1769571825,"~/AXO-Project/public/admin-dashboard.css"
+-'  1  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,1,0,1769571825,"~/AXO-Project/public/admin-dashboard.css"
+-'  1  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,1,0,1769571825,"~/AXO-Project/public/admin-dashboard.css"
+-'  1  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,1,0,1769571825,"~/AXO-Project/public/admin-dashboard.css"
+-'  1  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,1,0,1769571825,"~/AXO-Project/public/admin-dashboard.css"
+-'  1  0  ~/AXO-Project/public/admin-dashboard.css
+|4,39,1,0,1769571825,"~/AXO-Project/public/admin-dashboard.css"
 
 # History of marks within files (newest to oldest):
 
+> ~/AXO-Project/server.js
+	*	1769583108	0
+	"	3	41
+	^	3	42
+	.	3	41
+	+	1	12
+	+	1	3
+	+	1	20
+	+	1	12
+	+	1	3
+	+	1	27
+	+	1	3
+	+	1	50
+	+	1	2
+	+	1	50
+	+	1	2
+	+	1	27
+	+	1225	2
+	+	1	3
+	+	227	3
+	+	3	41
+
+> ~/AXO-Project/server-1.js
+	*	1769575001	0
+	"	118	0
+	^	118	0
+	.	117	3
+	+	1	27
+	+	1	3
+	+	1	27
+	+	132	3
+	+	64	26
+	+	117	3
+
+> /usr/share/nginx/html/styles/admin-dashboard.css
+	*	1769572282	0
+	"	562	0
+	^	562	0
+	.	561	9
+	+	561	9
+
+> /usr/share/nginx/html/admin-dashboard.html
+	*	1769572230	0
+	"	845	0
+	^	845	0
+	.	844	7
+	+	1	15
+	+	844	7
+
+> ~/AXO-Project/public/admin-dashboard.css
+	*	1769571830	0
+	"	562	0
+	^	562	0
+	.	561	9
+	+	561	9
+
+> ~/AXO-Project/public/admin-dashboard.html
+	*	1769571812	0
+	"	15	0
+	^	15	0
+	.	16	0
+	+	1	15
+	+	840	7
+	+	840	0
+	+	16	0
+
+> ~/AXO-Project/styles/admin-dashboard.css
+	*	1769571262	0
+	"	41	0
+	^	41	0
+	.	40	1
+	+	40	1
+
+> ~/AXO-Project/js/admin-dashboard.js
+	*	1769571232	0
+	"	59	0
+	^	59	0
+	.	58	1
+	+	1	64
+	+	58	1
+
+> /usr/share/vim/vim91/doc/help.txt
+	*	1769571204	0
+	"	1	0
+
+> ~/AXO-Project/.env
+	*	1769570210	0
+	"	9	21
+	^	9	22
+	.	5	21
+	+	1	36
+	+	1	38
+	+	1	35
+	+	1	22
+	+	26	40
+	+	13	0
+	+	14	0
+	+	15	0
+	+	16	0
+	+	17	0
+	+	18	0
+	+	26	25
+	+	5	21
+
+> ~/AXO-Project/.env1
+	*	1769530050	0
+	"	15	22
+	^	15	23
+	.	7	21
+	+	1	9
+	+	15	46
+	+	7	21
+
+> ~/AXO-Project/server
+	*	1769529935	0
+	"	1	0
+
+> ~/AXO-Project/test-admin-approval.sh
+	*	1768981316	0
+	"	66	27
+	^	66	28
+	.	66	27
+	+	66	27
+
 > /usr/share/nginx/html/index.html
-	*	1767452391	0
-	"	722	0
+	*	1768794690	0
+	"	2648	12
 	^	326	0
 	.	325	7
 	+	1	15
 	+	325	7
 
-> /usr/share/nginx/html/index.html.bkp
-	*	1767431622	0
-	"	778	8
-	^	778	9
-	.	779	0
-	+	779	0
+> ~/.ssh/authorized_keys
+	*	1768535133	0
+	"	2	0
+	^	2	0
+	.	1	397
+	+	1	143
+	+	1	101
+	+	1	397
 
-> ~/AXO-Project/public/js/dashboard.js
-	*	1767429802	0
-	"	21	0
-	^	21	0
-	.	20	1
-	+	20	1
+> .ssh/authorized_keys
+	*	1768534898	0
+	"	1	404
+	^	1	405
+	.	1	404
+	+	1	404
 
-> ~/AXO-Project/public/auth.js
-	*	1767429740	0
-	"	29	0
-	^	29	0
-	.	28	3
-	+	28	3
-
-> /usr/share/nginx/html/login.html
-	*	1767429688	0
-	"	25	0
-	^	25	0
-	.	24	7
-	+	24	7
-
-> ~/server.js
-	*	1767428761	0
-	"	1	0
-
-> ~/AXO-Project/routes/auth.routes.js
-	*	1767427955	0
-	"	270	0
-	^	270	0
-	.	269	24
-	+	1	81
-	+	1	50
-	+	1	3
-	+	1	50
-	+	269	24
-
-> ~/AXO-Project/routes/routes/auth.routes.js
-	*	1767427522	0
-	"	1	0
-
-> ~/AXO-Project/services/emailService.js
-	*	1767426094	0
-	"	101	0
-	^	101	0
-	.	100	2
-	+	100	2
-
-> ~/AXO-Project/middleware/auth.js
-	*	1767426027	0
-	"	33	52
-	^	33	53
-	.	33	52
-	+	33	52
-
-> ~/AXO-Project/models/User.js
-	*	1767425993	0
-	"	52	0
-	^	52	0
-	.	51	52
-	+	51	52
-
-> ~/AXO-Project/routes/auth.js
-	*	1767425960	0
-	"	265	0
-	^	265	0
-	.	264	24
-	+	264	24
-
-> ~/AXO-Project/scripts/createAdmin.js
-	*	1767425930	0
-	"	94	0
-	^	94	0
-	.	93	0
-	+	93	0
-
-> ~/AXO-Project/.env
-	*	1767425387	0
-	"	5	0
-	^	5	0
-	.	5	0
-	+	3	36
-	+	2	38
-	+	7	35
-	+	5	0
-
-> ~/AXO-Project/server.js
-	*	1767423799	0
-	"	16	2
-	^	16	30
-	.	16	29
-	+	1	12
-	+	234	3
-	+	1	20
-	+	1	12
-	+	213	3
-	+	1	27
-	+	115	3
-	+	16	29
-
-> /usr/share/nginx/html/oem.html
-	*	1767421662	0
-	"	1	0
-	^	1	1
-	.	1	0
-	+	1	0
-
-> ~/AXO-Project/public/supplier.html.bkp
-	*	1767420788	0
-	"	195	0
+> ~/AXO-Project/models/network.js
+	*	1768372095	0
+	"	63	0
+	^	63	0
+	.	62	72
+	+	62	72
 
 > /usr/share/nginx/html/supplier.html
-	*	1767420616	0
-	"	48	42
-	^	48	43
-	.	48	42
+	*	1768189882	0
+	"	1012	6
+	^	1012	7
+	.	1012	6
 	+	1	15
-	+	69	7
-	+	48	42
-
-> /etc/nginx/conf.d/axo.conf
-	*	1767420355	0
-	"	22	4
-	^	21	0
-	.	20	1
-	+	20	1
-
-> ~/AXO-Project/public/supplier.html
-	*	1767420028	0
-	"	46	0
-	^	70	0
-	.	69	7
+	+	1	7
 	+	1	15
-	+	69	7
+	+	1012	6
+
+> /usr/share/nginx/html/test-dashboard.html
+	*	1767862478	0
+	"	282	6
+	^	282	7
+	.	282	6
+	+	282	6
+
+> ~/AXO-Project/node-dia.js
+	*	1767859262	0
+	"	69	10
+	^	69	11
+	.	69	10
+	+	69	10
