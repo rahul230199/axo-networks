@@ -666,7 +666,7 @@ section {
   position: absolute;
   inset: 0;
   background-image: url('https://static.wixstatic.com/media/3d4c2a_2f337be5b7da445db58a7946af6d1fe4~mv2.jpg');
-  background-size: auto 100%;
+  background-size: auto 75%;
   background-position: 0 0;
   background-attachment: fixed;
   background-repeat: repeat-x;
@@ -2273,3 +2273,108 @@ html, body {
   }
 
 }
+/* ================= HAMBURGER (MENU TOGGLE) ================= */
+
+.menu-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.menu-toggle:hover {
+    background: var(--light-grey);
+    transform: rotate(90deg);
+}
+
+/* Hide hamburger on desktop */
+@media (min-width: 1024px) {
+    .menu-toggle {
+        display: none;
+    }
+}
+
+/* ================= NAV LINKS (RESPONSIVE) ================= */
+
+/* Desktop */
+.nav-links {
+    display: none;
+    margin-left: auto;
+}
+
+@media (min-width: 1024px) {
+    .nav-links {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+}
+
+/* ================= DROPDOWN MENU ================= */
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 1.5rem;
+    background-color: #ffffff;
+    min-width: 250px;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.dropdown-menu.active {
+    display: block;
+}
+
+/* ================= DROPDOWN ITEMS ================= */
+
+.dropdown-item {
+    display: block;
+    padding: 1rem 1.5rem;
+    color: var(--foreground);
+    border-bottom: 1px solid #F9FAFB;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: var(--light-grey);
+    padding-left: 2rem;
+    color: var(--primary);
+}
+
+.dropdown-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--primary);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.dropdown-item:hover::before {
+    transform: scaleY(1);
+}
+
+    .dropdown-menu{
+      width: 250px;
+      margin: 0;
+    }
