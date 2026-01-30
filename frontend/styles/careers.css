@@ -745,18 +745,15 @@
 
       .careers-title {
         font-size: 3rem;
-        font-weight: 800;
-        line-height: 1.1;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(
-          135deg,
-          var(--foreground) 0%,
-          var(--primary) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: fadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--foreground) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+   
       }
 
       @media (min-width: 640px) {
@@ -1427,11 +1424,12 @@
       /* ========== RESPONSIVE STYLES ========== */
       @media (max-width: 768px) {
         .careers-hero {
-          min-height: 90vh;
+          min-height: 90vh;   
+    padding-top: 0px;
         }
 
         .careers-hero-content {
-          padding-top: 10vh;
+          
           padding-bottom: 10vh;
         }
 
@@ -1541,6 +1539,7 @@
           max-width: 100%;
           padding-left: 1rem;
           padding-right: 1rem;
+          
         }
       }
 

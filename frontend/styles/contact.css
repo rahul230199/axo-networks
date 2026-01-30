@@ -805,67 +805,70 @@
 }
 /* =========================================
    CONTACT HERO – MOVING BACKGROUND IMAGE
+   (IMAGE OPACITY ONLY – CONTENT UNAFFECTED)
 ========================================= */
+
 .contact-hero {
   position: relative;
-  background-image: url('https://static.wixstatic.com/media/3d4c2a_2f337be5b7da445db58a7946af6d1fe4~mv2.jpg');
-  background-size: 75% auto;
-  background-repeat: repeat-x;
-  background-position: 0% 50%;
-  animation: gradientShift 15s ease infinite;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  padding-top: 120px;
+  padding-bottom: 100px;
+  text-align: center;
+
+  background: none;              /* ❌ remove background-image */
   overflow: hidden;
 }
-/* Image stays visible behind text */
+
+/* Moving background image */
 .contact-hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.6);  /* adjust if needed */
+
+  background-image: url('https://static.wixstatic.com/media/3d4c2a_2f337be5b7da445db58a7946af6d1fe4~mv2.jpg');
+  background-repeat: repeat-x;
+  background-position: 0% 50%;
+  background-size: 75% auto;
+
+  opacity: 0.15;                 /* ✅ IMAGE OPACITY ONLY */
+  animation: gradientShift 15s linear infinite;
+
   z-index: 0;
+  pointer-events: none;
 }
+
+/* Soft white wash (optional but recommended for readability) */
+.contact-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.35);  /* light wash */
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Content stays 100% opaque */
 .contact-hero > * {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
+
+/* ================= MOBILE TUNING ================= */
 @media (max-width: 767px) {
   .contact-hero {
-    background-size: 100% auto;
-    animation-duration: 30s;
+    min-height: 50vh;
+    padding-top: 250px;
+    padding-bottom: 80px;
+  }
+
+  .contact-hero::before {
     background-size: cover;
+    animation-duration: 30s;
+    opacity: 0.14;              /* slightly softer on small screens */
   }
-}
-
-@media (max-width: 1023px) {
-
-  .dropdown-menu {
-    position: fixed;
-    top: 70px;
-    right: 0;
-    left: auto;
-
-    width: 80vw;
-    max-width: 320px;
-
-    height: auto;                         /* 🔥 FIX */
-    max-height: calc(100vh - 70px);       /* safety only */
-
-    background: #ffffff;
-    box-shadow: -12px 0 30px rgba(0, 0, 0, 0.15);
-    border-left: 1px solid #E5E7EB;
-
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: 1001;
-  }
-
-   .dropdown-menu.active {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
 }

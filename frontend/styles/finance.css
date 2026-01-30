@@ -1253,3 +1253,30 @@
     background-size: cover;
     }
 }
+
+/* =========================================
+   MOBILE HERO CONTENT – MOVE UP
+   (Mobile only, safe override)
+========================================= */
+@media (max-width: 768px) {
+  .hero {
+    align-items: flex-start;          /* move content upward */
+    padding-top: 120px;               /* space below fixed header */
+  }
+
+  .hero-content {
+    margin-top: 0;                    /* remove vertical centering push */
+    padding-top: 2rem;                /* fine-tuned spacing */
+  }
+}
+
+/* Extra-small phones */
+@media (max-width: 480px) {
+  .hero {
+    padding-top: 200px;
+  }
+
+  .hero-content {
+    padding-top: 1.5rem;
+  }
+}
