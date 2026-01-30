@@ -184,21 +184,28 @@ function renderStatus(status) {
    ACTION BUTTONS
 ================================ */
 function renderActions(item) {
-    let html = `
-        <button class="btn btn-secondary" onclick="viewRequest(${item.id})">View</button>
+  let html = `
+    <button class="btn btn-secondary" onclick="viewRequest(${item.id})">
+      View
+    </button>
+  `;
+
+  if (item.status === "pending") {
+    html += `
+      <button class="btn btn-primary"
+        onclick="openStatusModal(${item.id}, 'verified')">
+        Approve
+      </button>
+      <button class="btn btn-danger"
+        onclick="openStatusModal(${item.id}, 'rejected')">
+        Reject
+      </button>
     `;
+  }
 
-    if (item.status === "pending") {
-        html += `
-            <button class="btn btn-primary"
-                onclick="updateStatus(${item.id}, 'verified')">Approve</button>
-            <button class="btn btn-danger"
-                onclick="updateStatus(${item.id}, 'rejected')">Reject</button>
-        `;
-    }
-
-    return html;
+  return html;
 }
+
 
 /* ===============================
    VIEW MODAL
@@ -252,7 +259,7 @@ function closeModal() {
    UPDATE STATUS
 ================================ */
 async function updateStatus(id, status) {
-    if (!confirm(`Are you sure you want to ${status}?`)) return;
+    
 
     try {
         const res = await fetch(`/api/network-request/${id}/status`, {
@@ -334,4 +341,61 @@ function exportData() {
 function logout() {
     localStorage.clear();
     window.location.href = "/portal-login";
+}
+let currentStatusId = null;
+let currentStatusValue = null;
+
+function openStatusModal(id, status) {
+  currentStatusId = id;
+  currentStatusValue = status;
+
+  document.getElementById("statusComment").value = "";
+  document.getElementById("statusTitle").innerText =
+    status === "verified" ? "Approve Request" : "Reject Request";
+
+  document.getElementById("statusModal").style.display = "block";
+
+  document.getElementById("confirmStatusBtn").onclick = submitStatusChange;
+}
+
+function closeStatusModal() {
+  document.getElementById("statusModal").style.display = "none";
+  currentStatusId = null;
+  currentStatusValue = null;
+}
+
+async function submitStatusChange() {
+  const comment = document.getElementById("statusComment").value.trim();
+
+  if (!comment) {
+    showNotification("Comment is required", "error");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `/api/network-request/${currentStatusId}/status`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: currentStatusValue,
+          comment: comment
+        })
+      }
+    );
+
+    if (!res.ok) throw new Error();
+
+    const json = await res.json();
+    if (!json.success) throw new Error();
+
+    showNotification("Status updated successfully", "success");
+    closeStatusModal();
+    loadDashboard();
+
+  } catch (err) {
+    console.error(err);
+    showNotification("Failed to update status", "error");
+  }
 }
