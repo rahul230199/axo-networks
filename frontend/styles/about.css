@@ -529,6 +529,7 @@ section {
     justify-content: center;
 }
 
+
 /* Subtle Background Image Layer - SAME AS FINANCIAL PAGE */
 .about-hero-background {
     position: absolute;
@@ -1597,4 +1598,232 @@ blockquote {
     .footer {
         padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
     }
+}
+/* =====================================================
+   MOBILE (Android + iPhone)
+   ===================================================== */
+@media (max-width: 767px) {
+
+  .about-hero {
+    min-height: auto;
+    padding-top: 80px;
+    padding-bottom: 4rem;
+  }
+
+  /* Performance: hide heavy visuals */
+  .hero-circle-1,
+  .hero-circle-2,
+  .hero-circle-3,
+  .hero-circle-4,
+  .hero-svg {
+    display: none;
+  }
+
+  .about-hero-background {
+    background-attachment: scroll;
+    background-size: cover;
+    animation-duration: 30s;
+  }
+
+  /* Typography */
+  .about-hero-title {
+    font-size: 2.2rem;
+    line-height: 1.15;
+    word-break: break-word;
+  }
+
+  .about-hero-subtitle {
+    font-size: 1rem;
+    max-width: 100%;
+  }
+
+  /* Layout */
+  section {
+    min-height: auto !important;
+    padding: 2rem 0 !important;
+  }
+
+  /* Containers */
+  .container,
+  .section-container,
+  .about-hero-content {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Grids */
+  .cards-grid,
+  .team-grid-updated,
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Buttons */
+  .primary-button,
+  .secondary-button,
+  .cta-button,
+  .cta-button-large {
+    width: 100%;
+    min-width: unset;
+  }
+
+  /* Footer */
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
+}
+/* =====================================================
+   iPHONE SAFARI FIXES
+   ===================================================== */
+@supports (-webkit-touch-callout: none) {
+
+  .about-hero {
+    min-height: -webkit-fill-available;
+    height: -webkit-fill-available;
+  }
+
+  .about-hero-background {
+    background-attachment: scroll;
+  }
+
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+/* =====================================================
+   TABLET
+   ===================================================== */
+@media (min-width: 768px) and (max-width: 1024px) {
+
+  .about-hero {
+    min-height: 100vh;
+    padding-top: 80px;
+  }
+
+  section {
+    min-height: auto;
+    padding: 6rem 0;
+  }
+
+  .cards-grid,
+  .team-grid-updated {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-hero-title {
+    font-size: 4.5rem;
+  }
+}
+/* =====================================================
+   DESKTOP
+   ===================================================== */
+@media (min-width: 1025px) {
+
+  .about-hero {
+     padding: 2rem 0 !important;
+    min-height: 100vh;
+  }
+
+  /* Desktop layout already handled by base CSS */
+}
+/* =====================================================
+   MOBILE + TABLET DROPDOWN SIZE CONTROL
+   ===================================================== */
+@media (max-width: 1024px) {
+
+  /* Base dropdown (inactive stays same) */
+  .dropdown-menu {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+     width: 78vw !important;      /* 👈 slightly smaller */
+    max-width: 300px;            /* 👈 keeps it neat */
+    right: 12px !important;      /* 👈 space from edge */
+    border-radius: 14px;
+  }
+
+  /* ACTIVE dropdown – smaller height */
+  .dropdown-menu.active {
+    max-height: 55vh;           /* 👈 key: does NOT cover screen */
+    overflow-y: auto;
+  }
+
+  /* Scrollbar styling (optional, subtle) */
+  .dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dropdown-menu::-webkit-scrollbar-thumb {
+    background: rgba(30, 58, 138, 0.25);
+    border-radius: 6px;
+  }
+
+  .dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+/* =====================================================
+   SMALL MOBILE REFINEMENT
+   ===================================================== */
+@media (max-width: 767px) {
+
+  .dropdown-menu.active {
+    max-height: 45vh;           /* even smaller on phones */
+  }
+
+  .dropdown-item {
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+/* =====================================================
+   iOS SAFARI SCROLL FIX
+   ===================================================== */
+@supports (-webkit-touch-callout: none) {
+
+  .dropdown-menu.active {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+/* =====================================================
+   FIX DROPDOWN SCROLL ISSUE (Mobile + Tablet)
+   ===================================================== */
+@media (max-width: 1024px) {
+
+  /* Stop internal scrolling */
+  .dropdown-menu {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Active state – natural height only */
+  .dropdown-menu.active {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+@supports (-webkit-touch-callout: none) {
+  .dropdown-menu {
+    overscroll-behavior: contain;
+  }
+}
+@media (max-width: 1024px) {
+  .dropdown-menu.active {
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+}
+@media (max-width: 767px) {
+
+  .dropdown-menu {
+    width: 82vw !important;      /* bit wider on small screens */
+    max-width: 280px;
+    right: 10px !important;
+  }
 }
