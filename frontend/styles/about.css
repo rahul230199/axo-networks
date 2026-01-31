@@ -17,6 +17,7 @@
     --light-grey: #F9FAFB;
     --grey: #E5E7EB;
     --dark-grey: #6B7280;
+    --header-offset: 110px;
     --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -44,10 +45,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h2 {
-    font-size: 2.25rem;
+    font-size: 3.5rem;
 }
-@media (min-width: 768px) { h2 { font-size: 2.75rem; } }
-@media (min-width: 1024px) { h2 { font-size: 3.5rem; } }
 
 p {
     margin-bottom: 1rem;
@@ -276,6 +275,7 @@ a {
 
 section {
     position: relative;
+    scroll-margin-top: var(--header-offset);
     overflow: hidden;
 }
 
@@ -290,7 +290,8 @@ section {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 1rem 0;
+    padding-top: 12px;
+    padding-bottom: 12px;
     transform: translateY(0);
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -339,16 +340,10 @@ section {
 }
 
 .nav-links {
-    display: none;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
     margin-left: auto;
-}
-
-@media (min-width: 1024px) {
-    .nav-links {
-        display: flex;
-        gap: 2rem;
-        align-items: center;
-    }
 }
 
 .nav-link {
@@ -426,9 +421,9 @@ section {
     padding: 1rem 1.5rem;
     color: var(--foreground);
     border-bottom: 1px solid #F9FAFB;
-    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .dropdown-item:hover {
@@ -454,81 +449,22 @@ section {
 }
 
 .menu-toggle {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-    padding: 0.5rem;
-    border-radius: 50%;
-}
-
-.menu-toggle:hover {
-    background: var(--light-grey);
-    transform: rotate(90deg);
-}
-
-@media (min-width: 1024px) {
-    .menu-toggle {
-        display: none;
-    }
-}
-
-/* ========== FIXED DROPDOWN FOR MOBILE ========== */
-@media (max-width: 1023px) {
-    .dropdown-menu {
-        position: fixed !important;
-        top: 70px !important;
-        right: 0 !important;
-        width: 85vw;
-        max-width: 320px;
-        height: auto;
-        max-height: calc(100vh - 80px);
-        background: #ffffff;
-        box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
-        border: 1px solid #E5E7EB;
-        border-radius: 12px 0 0 12px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        transform: translateX(100%);
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        z-index: 1001;
-        padding: 1rem 0;
-        margin: 0;
-    }
-
-    .dropdown-menu.active {
-        transform: translateX(0);
-    }
-
-    .dropdown-item {
-        padding: 1.25rem 2rem;
-        font-size: 1.1rem;
-        border-bottom: 1px solid #f3f4f6;
-    }
-
-    .dropdown-item:last-child {
-        border-bottom: none;
-    }
-
-    .dropdown-item:hover {
-        padding-left: 2.25rem;
-    }
+    display: none;
 }
 
 /* ========== HERO SECTION - EXACT SAME AS FINANCIAL PAGE ========== */
 .about-hero {
-    position: relative;
+      position: relative;
     min-height: 100vh;
     width: 100%;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    padding-top: 80px;
+    padding-top: 120px; /* header space */
+    padding-bottom: 60px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
 
 /* Subtle Background Image Layer - SAME AS FINANCIAL PAGE */
 .about-hero-background {
@@ -624,81 +560,28 @@ section {
 }
 
 .about-hero-title {
-    font-size: 3rem;
+    font-size: 6rem;
     font-weight: 800;
     line-height: 1.1;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     background: linear-gradient(135deg, var(--foreground) 0%, var(--primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: fadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    padding-top: 100px;
-}
-
-@media (min-width: 640px) {
-    .about-hero-title {
-        font-size: 4rem;
-    }
-}
-
-@media (min-width: 768px) {
-    .about-hero-title {
-        font-size: 5rem;
-        margin-bottom: 2rem;
-    }
-}
-
-@media (min-width: 1024px) {
-    .about-hero-title {
-        font-size: 6rem;
-    }
 }
 
 .about-hero-subtitle {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     color: var(--dark-grey);
     max-width: 48rem;
-    margin: 0 auto 2.5rem;
+    margin: 0 auto 3rem;
     line-height: 1.6;
     opacity: 0;
     animation: fadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
 }
 
-@media (min-width: 768px) {
-    .about-hero-subtitle {
-        font-size: 1.25rem;
-        margin-bottom: 3rem;
-    }
-}
-
 /* ========== FIX FOR IPHONE SAFARI HERO SECTION ========== */
-@supports (-webkit-touch-callout: none) {
-    /* Fix for iOS Safari */
-    .about-hero {
-        min-height: -webkit-fill-available;
-        height: 100vh;
-        height: -webkit-fill-available;
-    }
-    
-    /* Fix background attachment */
-    .about-hero-background {
-        background-attachment: scroll;
-    }
-    
-    /* Fix for smooth scrolling */
-    .about-hero {
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Fix for button gradients on iOS */
-    .primary-button,
-    .cta-button-large,
-    .secondary-button {
-        -webkit-appearance: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-}
 
 /* ========== FIXED SCROLL INDICATOR ALIGNMENT ========== */
 .scroll-indicator {
@@ -740,13 +623,12 @@ section {
 
 /* ========== SECTIONS - MATCHING ABOUT PAGE STRUCTURE ========== */
 .mission-section {
-    padding: 8rem 0;
-    background-color: var(--light-grey);
-    position: relative;
     min-height: 100vh;
     display: flex;
     align-items: center;
+    padding: 80px 0;
 }
+
 
 .team-section {
     padding: 8rem 0;
@@ -782,25 +664,13 @@ section {
 }
 
 .section-header h2 {
-    font-size: 2.25rem;
+    font-size: 3.5rem;
     color: var(--foreground);
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, var(--foreground) 0%, var(--primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-}
-
-@media (min-width: 768px) {
-    .section-header h2 {
-        font-size: 2.75rem;
-    }
-}
-
-@media (min-width: 1024px) {
-    .section-header h2 {
-        font-size: 3.5rem;
-    }
 }
 
 .section-header p {
@@ -814,14 +684,8 @@ section {
 /* ========== CARDS GRID - MATCHING FINANCIAL PAGE ========== */
 .cards-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
-}
-
-@media (min-width: 768px) {
-    .cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
 }
 
 .feature-card,
@@ -990,30 +854,6 @@ blockquote {
     gap: 1.5rem;
     max-width: 1400px;
     margin: 0 auto;
-}
-
-@media (max-width: 1200px) {
-    .team-grid-updated {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (max-width: 992px) {
-    .team-grid-updated {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .team-grid-updated {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 576px) {
-    .team-grid-updated {
-        grid-template-columns: 1fr;
-    }
 }
 
 .team-card-updated {
@@ -1203,18 +1043,12 @@ blockquote {
 }
 
 .join-container-updated h2 {
-    font-size: 2.25rem;
+    font-size: 2.75rem;
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, var(--foreground) 0%, var(--primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-}
-
-@media (min-width: 768px) {
-    .join-container-updated h2 {
-        font-size: 2.75rem;
-    }
 }
 
 .join-description {
@@ -1364,196 +1198,17 @@ blockquote {
     box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3);
 }
 
-/* ========== RESPONSIVE STYLES - MATCHING FINANCIAL PAGE ========== */
-@media (max-width: 1024px) {
-    .cards-grid, .team-grid-updated {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    section:not(.about-hero) {
-        padding: 6rem 0;
-        min-height: auto;
-    }
-    
-    .section-header h2 {
-        font-size: 2.75rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .about-hero {
-        padding-top: 80px;
-        min-height: 90vh;
-    }
-
-    .about-hero-title {
-        font-size: 2.5rem;
-    }
-
-    .about-hero-subtitle {
-        font-size: 1.125rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .mission-section,
-    .team-section,
-    .philosophy-section {
-        padding: 6rem 0;
-        min-height: auto;
-    }
-
-    .join-section {
-        padding: 6rem 0;
-        min-height: auto;
-    }
-
-    .cards-grid, .team-grid-updated {
-        grid-template-columns: 1fr;
-    }
-
-    .feature-card,
-    .step-card,
-    .team-card,
-    .team-card-updated {
-        padding: 1.5rem;
-    }
-
-    .feature-card h3,
-    .step-card h3,
-    .team-card h3,
-    .team-card-content h3 {
-        font-size: 1.25rem;
-    }
-
-    .join-container {
-        padding: 2rem;
-    }
-
-    .blockquote-container {
-        padding: 2rem;
-    }
-
-    blockquote {
-        font-size: 1.5rem;
-    }
-
-    .scroll-indicator {
-        bottom: 20px;
-    }
-
-    /* Hide circles on mobile */
-    .hero-circle-1,
-    .hero-circle-2,
-    .hero-circle-3,
-    .hero-circle-4,
-    .hero-svg {
-        display: none;
-    }
-
-    .about-hero-background {
-        background-size: cover;
-        background-attachment: scroll;
-        animation-duration: 30s;
-    }
-
-    .footer-content {
-        grid-template-columns: 1fr;
-    }
-
-    .section-title {
-        font-size: 2.25rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .about-hero-title {
-        font-size: 2rem;
-    }
-
-    .about-hero-subtitle {
-        font-size: 1rem;
-    }
-
-    .primary-button,
-    .secondary-button,
-    .cta-button-large {
-        min-width: 100%;
-    }
-
-    .section-header h2 {
-        font-size: 1.75rem;
-    }
-
-    .hero-background {
-        background-attachment: scroll;
-        background-size: cover;
-    }
-
-    .about-hero-background {
-        background-size: cover;
-        background-attachment: scroll;
-    }
-}
-
-/* ========== FIX FOR SMALL SCREEN SCROLLING ========== */
-@media (max-width: 767px) {
-    /* Ensure sections don't overlap */
-    section {
-        min-height: auto !important;
-    }
-    
-    /* Fix any potential margin collapse */
-    .mission-section,
-    .team-section,
-    .philosophy-section,
-    .join-section,
-    .team-section-updated,
-    .philosophy-section-expanded,
-    .join-section-updated {
-        margin: 0 !important;
-        padding-top: 4rem !important;
-        padding-bottom: 4rem !important;
-    }
-    
-    /* Clear any floats */
-    .about-hero::after,
-    .mission-section::after,
-    .team-section::after {
-        content: "";
-        display: table;
-        clear: both;
-    }
-}
-
 /* ========== GRID LAYOUTS ========== */
 .grid-layout {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 2rem;
-}
-
-@media (min-width: 768px) {
-    .grid-layout {
-        grid-template-columns: 1fr 1fr;
-    }
 }
 
 .team-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
-}
-
-@media (min-width: 640px) {
-    .team-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .team-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
 }
 
 /* ========== SPECIFIC ABOUT PAGE STYLES ========== */
@@ -1593,237 +1248,195 @@ blockquote {
     display: block;
 }
 
-/* ========== FIX FOR IPHONE BOTTOM SAFE AREA ========== */
-@supports (padding: max(0px)) {
-    .footer {
-        padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+/* ===== Anchor Offset Fix ===== */
+:root {
+    --header-offset: 110px;
+}
+
+section {
+    scroll-margin-top: var(--header-offset);
+}
+
+/* ===== Mission Full Screen Feel ===== */
+.mission-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 80px 0;
+}
+/* ================================================= */
+/* ========== MOBILE + TABLET RESPONSIVE FIX ========= */
+/* ================================================= */
+
+/* ---------- iPhone + Android Phones ---------- */
+@media (max-width: 768px) {
+
+    :root {
+        --header-offset: 90px;
+    }
+
+    /* Hero Fix */
+    .about-hero {
+        min-height: 100svh; /* Safari + Android viewport fix */
+        padding-top: 110px;
+        padding-bottom: 40px;
+    }
+
+    .about-hero-title {
+        font-size: 3rem;
+        line-height: 1.2;
+    }
+
+    .about-hero-subtitle {
+        font-size: 1rem;
+        padding: 0 10px;
+    }
+
+    /* Mission Section */
+    .mission-section {
+        min-height: auto;
+        padding: 80px 0 60px;
+    }
+
+    /* Grid Layout Stack */
+    .grid-layout {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    /* Team Grid Mobile */
+    .team-grid-updated {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Section Headers */
+    .section-header h2 {
+        font-size: 2.2rem;
+    }
+
+    /* Buttons */
+    .primary-button,
+    .secondary-button {
+        width: 100%;
+        min-width: auto;
+    }
+
+    /* Header Nav Hide → Mobile Menu Only */
+    .nav-links {
+        display: none;
+    }
+
+    .menu-toggle {
+        display: block;
+        font-size: 1.4rem;
+        background: none;
+        border: none;
+        cursor: pointer;
     }
 }
-/* =====================================================
-   MOBILE (Android + iPhone)
-   ===================================================== */
-@media (max-width: 767px) {
 
-  .about-hero {
-    min-height: auto;
-    padding-top: 80px;
-    padding-bottom: 4rem;
-  }
 
-  /* Performance: hide heavy visuals */
-  .hero-circle-1,
-  .hero-circle-2,
-  .hero-circle-3,
-  .hero-circle-4,
-  .hero-svg {
-    display: none;
-  }
+/* ---------- Large Phones / Small Tablets ---------- */
+@media (min-width: 769px) and (max-width: 1024px) {
 
-  .about-hero-background {
-    background-attachment: scroll;
-    background-size: cover;
-    animation-duration: 30s;
-  }
+    :root {
+        --header-offset: 100px;
+    }
 
-  /* Typography */
-  .about-hero-title {
-    font-size: 2.2rem;
-    line-height: 1.15;
-    word-break: break-word;
-  }
+    .about-hero-title {
+        font-size: 4.5rem;
+    }
 
-  .about-hero-subtitle {
-    font-size: 1rem;
-    max-width: 100%;
-  }
+    .team-grid-updated {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-  /* Layout */
-  section {
-    min-height: auto !important;
-    padding: 2rem 0 !important;
-  }
-
-  /* Containers */
-  .container,
-  .section-container,
-  .about-hero-content {
-    max-width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  /* Grids */
-  .cards-grid,
-  .team-grid-updated,
-  .team-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* Buttons */
-  .primary-button,
-  .secondary-button,
-  .cta-button,
-  .cta-button-large {
-    width: 100%;
-    min-width: unset;
-  }
-
-  /* Footer */
-  .footer-content {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .social-links {
-    justify-content: center;
-  }
+    .grid-layout {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
 }
-/* =====================================================
-   iPHONE SAFARI FIXES
-   ===================================================== */
-@supports (-webkit-touch-callout: none) {
 
-  .about-hero {
-    min-height: -webkit-fill-available;
-    height: -webkit-fill-available;
-  }
 
-  .about-hero-background {
-    background-attachment: scroll;
-  }
+/* ---------- Tablets Landscape / iPad Pro ---------- */
+@media (min-width: 1025px) and (max-width: 1366px) {
 
-  body {
-    -webkit-overflow-scrolling: touch;
-  }
+    .team-grid-updated {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .about-hero-title {
+        font-size: 5rem;
+    }
 }
-/* =====================================================
-   TABLET
-   ===================================================== */
-@media (min-width: 768px) and (max-width: 1024px) {
 
-  .about-hero {
-    min-height: 100vh;
-    padding-top: 80px;
-  }
 
-  section {
-    min-height: auto;
-    padding: 6rem 0;
-  }
+/* ---------- Extra Small Phones (iPhone SE etc) ---------- */
+@media (max-width: 400px) {
 
-  .cards-grid,
-  .team-grid-updated {
-    grid-template-columns: repeat(2, 1fr);
-  }
+    .about-hero-title {
+        font-size: 2.4rem;
+    }
 
-  .about-hero-title {
-    font-size: 4.5rem;
-  }
+    .section-header h2 {
+        font-size: 2rem;
+    }
+
+    .about-hero-subtitle {
+        font-size: 0.95rem;
+    }
 }
-/* =====================================================
-   DESKTOP
-   ===================================================== */
-@media (min-width: 1025px) {
+/* ===== MOBILE HERO TOP GAP REDUCTION ===== */
+@media (max-width: 768px) {
 
-  .about-hero {
-     padding: 2rem 0 !important;
-    min-height: 100vh;
-  }
+    .about-hero {
+        padding-top: 80px;   /* was ~110 → reduce */
+        padding-bottom: 40px;
+        min-height: 100svh;
+        align-items: center; /* keep vertical center */
+    }
 
-  /* Desktop layout already handled by base CSS */
+    .about-hero-content {
+        margin-top: -20px;   /* moves text slightly up */
+    }
+
 }
-/* =====================================================
-   MOBILE + TABLET DROPDOWN SIZE CONTROL
-   ===================================================== */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
 
-  /* Base dropdown (inactive stays same) */
-  .dropdown-menu {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-     width: 78vw !important;      /* 👈 slightly smaller */
-    max-width: 300px;            /* 👈 keeps it neat */
-    right: 12px !important;      /* 👈 space from edge */
-    border-radius: 14px;
-  }
+    .about-hero {
+        padding-top: 70px;
+    }
 
-  /* ACTIVE dropdown – smaller height */
-  .dropdown-menu.active {
-    max-height: 55vh;           /* 👈 key: does NOT cover screen */
-    overflow-y: auto;
-  }
+    .about-hero-content {
+        margin-top: -30px;
+    }
 
-  /* Scrollbar styling (optional, subtle) */
-  .dropdown-menu::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .dropdown-menu::-webkit-scrollbar-thumb {
-    background: rgba(30, 58, 138, 0.25);
-    border-radius: 6px;
-  }
-
-  .dropdown-menu::-webkit-scrollbar-track {
-    background: transparent;
-  }
 }
-/* =====================================================
-   SMALL MOBILE REFINEMENT
-   ===================================================== */
-@media (max-width: 767px) {
+/* ===== PERFECT MOBILE HERO OPTICAL CENTER ===== */
+@media (max-width: 768px) {
 
-  .dropdown-menu.active {
-    max-height: 45vh;           /* even smaller on phones */
-  }
+    .about-hero {
+        min-height: 100svh;
+        padding-top: 70px;   /* header safe space */
+        padding-bottom: 30px;
+        display: flex;
+        align-items: flex-start; /* NOT center → start */
+        justify-content: center;
+    }
 
-  .dropdown-item {
-    padding: 0.9rem 1.5rem;
-    font-size: 1rem;
-  }
-}
-/* =====================================================
-   iOS SAFARI SCROLL FIX
-   ===================================================== */
-@supports (-webkit-touch-callout: none) {
+    .about-hero-content {
+        margin-top: 40px; /* pushes content slightly down from header */
+    }
 
-  .dropdown-menu.active {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-/* =====================================================
-   FIX DROPDOWN SCROLL ISSUE (Mobile + Tablet)
-   ===================================================== */
-@media (max-width: 1024px) {
+    .about-hero-title {
+        font-size: 3rem;
+        margin-bottom: 1.2rem;
+    }
 
-  /* Stop internal scrolling */
-  .dropdown-menu {
-    max-height: none !important;
-    overflow: visible !important;
-  }
+    .about-hero-subtitle {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
 
-  /* Active state – natural height only */
-  .dropdown-menu.active {
-    max-height: none !important;
-    overflow: visible !important;
-  }
-}
-@supports (-webkit-touch-callout: none) {
-  .dropdown-menu {
-    overscroll-behavior: contain;
-  }
-}
-@media (max-width: 1024px) {
-  .dropdown-menu.active {
-    max-height: 65vh;
-    overflow-y: auto;
-  }
-}
-@media (max-width: 767px) {
-
-  .dropdown-menu {
-    width: 82vw !important;      /* bit wider on small screens */
-    max-width: 280px;
-    right: 10px !important;
-  }
 }
