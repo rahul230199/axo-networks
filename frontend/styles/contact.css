@@ -872,11 +872,3 @@
     opacity: 0.14;              /* slightly softer on small screens */
   }
 }
-/* =========================================
-REMOVE BACKGROUND GRID / GREY LINES
-========================================= */
-
-.blueprint-grid,
-.hero-svg {
-    display: none !important;
-}

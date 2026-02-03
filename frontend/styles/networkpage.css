@@ -1259,11 +1259,3 @@ DESKTOP ONLY
     }
 
 }
-/* =========================================
-REMOVE BACKGROUND GRID / GREY LINES
-========================================= */
-
-.blueprint-grid,
-.hero-svg {
-    display: none !important;
-}
