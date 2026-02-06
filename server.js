@@ -1,20 +1,32 @@
 require("dotenv").config();
 const express = require("express");
-const { Pool } = require("pg");
+
+// ✅ USE SHARED DB POOL (instead of creating a new Pool here)
+const pool = require("./src/config/db");
+
+// Swagger
+const swaggerSetup = require("./src/docs/swagger");
+
+// Routes
+const rfqRoutes = require("./routes/rfq.routes");
+const rfqFiles = require("./routes/rfqFiles.routes");
+const quote = require("./routes/quote.routes");
+const rfqmessages = require("./routes/rfqMessage.routes");
+const purchaseOrder = require("./routes/purchaseOrder.routes");
+const quoteAcceptance = require("./routes/quoteAcceptance.routes");
 const authRoutes = require("./routes/auth.routes");
+
+// Middlewares
+const errorHandler = require("../axo-networks/middleware/errorHandler.middleware");
+
+// Services
 const { createUsersFromRequest } = require("./services/userProvisioningService");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* ===================== DB ===================== */
-const pool = new Pool({
-  host: process.env.PGHOST || "localhost",
-  database: process.env.PGDATABASE || "axo_networks",
-  user: process.env.PGUSER || "postgres",
-  password: process.env.PGPASSWORD || "",
-  port: process.env.PGPORT || 5432,
-});
+// Swagger setup
+swaggerSetup(app);
 
 /* ===================== MIDDLEWARE ===================== */
 app.use(express.json());
@@ -28,6 +40,12 @@ app.use((req, res, next) => {
 
 /* ===================== ROUTES ===================== */
 app.use("/api/auth", authRoutes);
+app.use("/api/rfqs", rfqRoutes);
+app.use("/api/rfq-files", rfqFiles);
+app.use("/api/quotes", quote);
+app.use("/api/quotes", quoteAcceptance);
+app.use("/api/rfq-messages", rfqmessages);
+app.use("/api/purchase-orders", purchaseOrder);
 
 /* ===================== HEALTH ===================== */
 app.get("/api/_health", async (_, res) => {
@@ -108,8 +126,10 @@ app.put("/api/network-request/:id/status", async (req, res) => {
   res.json({ success: true });
 });
 
+/* ===================== ERROR HANDLER (LAST) ===================== */
+app.use(errorHandler);
+
 /* ===================== START ===================== */
 app.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 );
-
