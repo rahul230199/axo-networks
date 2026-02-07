@@ -94,10 +94,10 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ LOGIN ERROR:", err);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
+   console.error("❌ LOGIN ERROR:", err.message);
+  return res.status(500).json({
+    success: false,
+    message: "Database connection failed"
     });
   }
 });
