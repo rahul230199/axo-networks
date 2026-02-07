@@ -75,9 +75,10 @@ app.get("/login", (_, res) => {
   res.sendFile(path.join(__dirname, "frontend", "login.html"));
 });
 
-app.get("/dashboard", (_, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "dashboard.html"));
+app.get("/buyer-dashboard", (_, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "buyer-dashboard.html"));
 });
+
 
 app.get("/admin-dashboard", (_, res) => {
   res.sendFile(path.join(__dirname, "frontend", "admin-dashboard.html"));
