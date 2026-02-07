@@ -1,7 +1,8 @@
-
+/* =====================================================
+   DESIGN TOKENS
+===================================================== */
 :root {
   --primary: #1E3A8A;
-  --primary-light: #3B82F6;
   --primary-dark: #1E40AF;
   --success: #16A34A;
   --danger: #DC2626;
@@ -14,109 +15,160 @@
   --grey: #E5E7EB;
   --dark-grey: #6B7280;
 
-  --radius: 16px;
+  --radius-lg: 20px;
+  --radius: 14px;
   --transition: all 0.25s ease;
 }
 
-/* ---------- RESET ---------- */
-* {
+/* =====================================================
+   RESET + SCROLL SAFETY
+===================================================== */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  font-family: 'Nunito Sans', sans-serif;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
+  font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--foreground);
-  overflow-x: hidden;
 }
 
-/* ---------- LAYOUT ---------- */
+/* =====================================================
+   LAYOUT
+===================================================== */
 .container {
+  width: 100%;
   max-width: 1200px;
   margin: auto;
-  padding: 28px;
+  padding: 24px;
 }
 
-/* ---------- HEADER ---------- */
+/* =====================================================
+   HEADER
+===================================================== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--grey);
   margin-bottom: 24px;
+  border-bottom: 1px solid var(--grey);
+  flex-wrap: wrap; /* ✅ FIX */
 }
 
 .logo {
   display: flex;
   gap: 6px;
   font-size: 18px;
+  white-space: nowrap;
 }
 
-.logo .brand {
-  font-weight: 800;
-  color: var(--primary-dark);
-}
+.logo .brand { font-weight: 800; color: var(--primary-dark); }
+.logo .divider { color: var(--dark-grey); }
+.logo .page { font-weight: 600; color: var(--foreground-light); }
 
-.logo .divider {
-  color: var(--dark-grey);
-}
-
-.logo .page {
-  font-weight: 600;
-  color: var(--foreground-light);
-}
-
+/* =====================================================
+   HEADER ACTIONS (CRITICAL FIX)
+===================================================== */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--background);
-  padding: 8px 12px;
-  border-radius: var(--radius);
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  flex-wrap: wrap;              /* ✅ FIX */
+  max-width: 100%;              /* ✅ FIX */
 }
 
-/* ---------- USER ---------- */
+.header-actions > * {
+  flex-shrink: 0;               /* ✅ FIX */
+}
+
+/* USER */
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .avatar {
-  width: 38px;
-  height: 38px;
-  background: var(--primary-dark);
-  color: #fff;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
   border-radius: 50%;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 14px;
 }
 
-/* ---------- BUTTONS ---------- */
+.user-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.user-role {
+  font-size: 12px;
+  color: var(--dark-grey);
+}
+
+/* =====================================================
+   BUTTONS (VISIBLE ON MOBILE)
+===================================================== */
 .btn {
   border: none;
-  border-radius: 12px;
+  border-radius: 999px;
   padding: 8px 14px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: max-content;       /* ✅ FIX */
 }
 
-.btn-primary { background: var(--primary-dark); color: #fff; }
-.btn-secondary { background: var(--grey); }
-.btn-danger { background: var(--danger); color: #fff; }
+.btn i {
+  font-size: 13px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--grey);
+  color: var(--foreground);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, var(--danger));
+  color: white;
+}
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
 }
 
-/* ---------- STATS ---------- */
+/* =====================================================
+   STATS
+===================================================== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -126,9 +178,9 @@ body {
 
 .stat-card {
   background: var(--background);
-  padding: 18px 20px;
-  border-radius: var(--radius);
-  animation: fadeUp 0.4s ease both;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(17,24,39,0.06);
 }
 
 .stat-label {
@@ -142,16 +194,24 @@ body {
   color: var(--primary-dark);
 }
 
-/* ---------- CARD ---------- */
+/* =====================================================
+   CARD
+===================================================== */
 .card {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
+  background: var(--background);
+  border-radius: var(--radius-lg);
   padding: 22px;
   box-shadow: 0 20px 40px rgba(17,24,39,0.08);
 }
 
-/* ---------- TABLE ---------- */
+/* =====================================================
+   TABLE
+===================================================== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 table {
   width: 100%;
   border-collapse: separate;
@@ -159,208 +219,150 @@ table {
 }
 
 th, td {
-  padding: 14px;
+  padding: 14px 12px;
   border-bottom: 1px solid var(--grey);
+  font-size: 13px;
 }
 
-thead th {
-  font-size: 12px;
-  text-transform: uppercase;
-  color: var(--dark-grey);
-}
-
-/* ---------- STATUS ---------- */
+/* =====================================================
+   BADGES
+===================================================== */
 .badge {
   padding: 5px 10px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .badge.approved { background: #DCFCE7; color: #065F46; }
-.badge.pending { background: #FEF3C7; color: #92400E; }
+.badge.pending  { background: #FEF3C7; color: #92400E; }
 .badge.rejected { background: #FEE2E2; color: #991B1B; }
 
-/* ---------- MODAL ---------- */
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--dark-grey);
+}
+
+/* =====================================================
+   MOBILE & TABLET
+===================================================== */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+
+  .container {
+    padding: 16px;
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(14px);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* ✅ BUTTONS STAY VISIBLE */
+  .header-actions .btn {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    display: block;
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 12px;
+    border-bottom: 1px dashed var(--grey);
+    word-break: break-word;
+  }
+
+  tbody td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--dark-grey);
+  }
+
+  tbody td:last-child {
+    border-bottom: none;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}
+
+/* =====================================================
+   SKELETON LOADERS
+===================================================== */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e5e7eb;
+  border-radius: 12px;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.6),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.stat-card.skeleton { height: 88px; }
+.skeleton-row { height: 48px; margin-bottom: 10px; }
+
 .modal {
   display: none;
   position: fixed;
   inset: 0;
   background: rgba(17,24,39,0.6);
   z-index: 999;
-}
+  padding: 16px;
 
-.modal-content {
-  background: #FFFFFF; /* ✅ PURE WHITE */
-  max-width: 600px;
-  margin: 60px auto;
-  padding: 22px;
-  border-radius: 22px;
-  max-height: 85vh;
-  overflow-y: auto;
-  animation: modalIn 0.35s ease;
-}
-
-.modal-content h3 {
-  text-align: center;
-  margin-bottom: 18px;
-  font-size: 20px;
-}
-
-.modal-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.modal-grid p {
-  background: #F3F4F6;
-  padding: 10px 12px;
-  border-radius: 12px;
-  font-size: 13px;
-}
-
-/* ---------- ANIMATIONS ---------- */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ======================================
-   MOBILE FIXES (CORE)
-====================================== */
-@media (max-width: 768px) {
-
-  /* Header */
-  .header { flex-direction: column; gap: 14px; }
-
-  /* Refresh → icon only */
-  .btn.btn-secondary i { margin: 0; }
-  .btn.btn-secondary span { display: none; }
-
-  /* Stats → 2x2 grid */
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Table → cards */
-  table { display: block; }
-  thead { display: none; }
-
-  tbody tr {
-    display: block;
-    background: #FFFFFF;
-    border-radius: 18px;
-    padding: 14px;
-    margin-bottom: 14px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  }
-
-  tbody td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dashed var(--grey);
-    font-size: 13px;
-  }
-
-  tbody td:last-child {
-    border-bottom: none;
-    margin-top: 10px;
-  }
-
-  tbody td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: var(--dark-grey);
-  }
-
-  /* Actions buttons */
-  td[data-label="Actions"] {
-    gap: 6px;
-    justify-content: center;
-  }
-
-  td button {
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 10px;
-  }
-
-  /* Modal */
-  .modal-content {
-    width: calc(100% - 24px);
-    margin: 50px auto;
-  }
-
-  .modal-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ======================================
-   SMALL MOBILE
-====================================== */
-@media (max-width: 480px) {
-
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-
-  .btn {
-    min-height: 40px;
-  }
-}
-/* ===============================
-   STATUS CONFIRM MODAL
-================================ */
-.status-modal {
-  max-width: 420px;
-  padding: 24px;
-}
-
-.status-modal h3 {
-  text-align: center;
-  margin-bottom: 14px;
-}
-
-#statusComment {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--grey);
-  padding: 12px;
-  font-size: 14px;
-  resize: none;
-  outline: none;
-}
-
-#statusComment:focus {
-  border-color: var(--primary);
-}
-
-.status-actions {
+  /* ✅ FIX */
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.status-actions button {
-  flex: 1;
-}
-
-/* Mobile */
-@media (max-width: 480px) {
-  .status-modal {
-    width: calc(100% - 24px);
-  }
+  align-items: center;
+  justify-content: center;
 }

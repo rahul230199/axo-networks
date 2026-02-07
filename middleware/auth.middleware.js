@@ -1,33 +1,63 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
 
-const authMiddleware = async (req, res, next) => {
+/* ===================== AUTH ===================== */
+const authenticate = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ message: 'No authentication token provided' });
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authentication required" });
     }
+
+    const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
-    
-    if (!user || !user.isActive) {
-      return res.status(401).json({ message: 'User not found or inactive' });
+
+    const result = await pool.query(
+      `SELECT id, email, role, is_active
+       FROM users
+       WHERE id = $1`,
+      [decoded.userId]
+    );
+
+    if (!result.rows.length || result.rows[0].is_active === false) {
+      return res.status(401).json({ message: "User not found or inactive" });
     }
 
-    req.user = user;
+    req.user = result.rows[0];
     next();
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
 
-const adminMiddleware = (req, res, next) => {
-  if (req.user.role !== 'ADMIN') {
-    return res.status(403).json({ message: 'Access denied. Admin only.' });
+/* ===================== ROLE GUARDS ===================== */
+const authorizeAdmin = (req, res, next) => {
+  if (req.user.role !== "ADMIN") {
+    return res.status(403).json({ message: "Admin access only" });
   }
   next();
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+const authorizeBuyer = (req, res, next) => {
+  if (req.user.role !== "BUYER") {
+    return res.status(403).json({ message: "Buyer access only" });
+  }
+  next();
+};
+
+const authorizeSupplier = (req, res, next) => {
+  if (req.user.role !== "SUPPLIER") {
+    return res.status(403).json({ message: "Supplier access only" });
+  }
+  next();
+};
+
+module.exports = {
+  authenticate,
+  authorizeAdmin,
+  authorizeBuyer,
+  authorizeSupplier,
+};
+r
