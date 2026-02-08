@@ -1,116 +1,95 @@
 /* =========================================================
-   ENV MODE CONFIG
+   ENV
 ========================================================= */
-
-const ENV = "local"; // "local" | "prod"
+const ENV = "local";
 const IS_LOCAL = ENV === "local";
 
 /* =========================================================
-   AUTH / USER
+   AUTH
 ========================================================= */
-
 function getUser() {
   return JSON.parse(localStorage.getItem("user"));
 }
-
 function getToken() {
   return localStorage.getItem("token");
 }
 
-/* ---------------- LOCAL MODE ---------------- */
-if (IS_LOCAL) {
-  if (!getUser()) {
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: 1,
-        email: "buyer.local@axonetworks.com",
-        role: "BUYER"
-      })
-    );
-    localStorage.setItem("token", "LOCAL_DEV_TOKEN");
-  }
+/* LOCAL MODE */
+if (IS_LOCAL && !getUser()) {
+  localStorage.setItem(
+    "user",
+    JSON.stringify({
+      id: 1,
+      email: "buyer.local@axonetworks.com",
+      role: "BUYER"
+    })
+  );
+  localStorage.setItem("token", "LOCAL_DEV_TOKEN");
 }
 
-/* ---------------- PROD MODE ---------------- */
-if (!IS_LOCAL) {
-  if (!getUser() || !getToken()) {
-    window.location.href = "/login";
-  }
+/* PROD MODE */
+if (!IS_LOCAL && (!getUser() || !getToken())) {
+  window.location.href = "/login";
 }
 
 /* =========================================================
    DOM READY
 ========================================================= */
-
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("rfqForm");
-  if (form) {
-    form.addEventListener("submit", submitRFQ);
-  }
+  document.getElementById("rfqForm").addEventListener("submit", submitRFQ);
+  document.getElementById("saveDraftBtn").addEventListener("click", saveDraft);
 });
 
 /* =========================================================
-   FORM DATA BUILDER
+   PAYLOAD BUILDER
 ========================================================= */
-
 function buildRFQPayload(status) {
-  const user = getUser();
-
   return {
-    buyer_id: user.id,
-    part_name: getValue("partName"),
-    part_id: getValue("partId"),
-    total_quantity: Number(getValue("totalQuantity")),
-    batch_quantity: Number(getValue("batchQuantity")) || null,
-    target_price: Number(getValue("targetPrice")) || null,
-    delivery_timeline: getValue("deliveryTimeline"),
-    material_specification: getValue("materialSpec"),
-    ppap_level: getValue("ppapLevel") || null,
-    status, // draft | active
-    files: document.getElementById("rfqFiles")?.files || []
+    buyer_id: getUser().id,
+    part_name: value("partName"),
+    part_id: value("partId"),
+    total_quantity: Number(value("totalQuantity")),
+    batch_quantity: Number(value("batchQuantity")) || null,
+    target_price: Number(value("targetPrice")) || null,
+    delivery_timeline: value("deliveryTimeline"),
+    material_specification: value("materialSpec"),
+    ppap_level: value("ppapLevel") || null,
+    status,
+    files: document.getElementById("rfqFiles").files
   };
 }
 
-function getValue(id) {
-  return document.getElementById(id)?.value.trim();
-}
+const value = id => document.getElementById(id)?.value.trim();
 
 /* =========================================================
    VALIDATION
 ========================================================= */
-
-function validateRFQ(payload) {
-  if (!payload.part_name) return "Part name is required";
-  if (!payload.part_id) return "Part ID is required";
-  if (!payload.total_quantity || payload.total_quantity <= 0)
+function validateRFQ(p) {
+  if (!p.part_name) return "Part name is required";
+  if (!p.part_id) return "Part ID is required";
+  if (!p.total_quantity || p.total_quantity <= 0)
     return "Total quantity must be greater than 0";
-  if (!payload.delivery_timeline)
+  if (!p.delivery_timeline)
     return "Delivery timeline is required";
-
   return null;
 }
 
 /* =========================================================
    ACTIONS
 ========================================================= */
-
-function saveDraft() {
+async function saveDraft() {
   clearMessage();
 
   const payload = buildRFQPayload("draft");
+  payload.delivery_timeline ||= "TBD"; // draft safe
 
-  // Draft allows partial save → skip delivery validation
   if (IS_LOCAL) {
-    console.log("📝 Draft RFQ (LOCAL):", payload);
-    showMessage("Draft saved successfully (Local Mode)", "success");
-
-    setTimeout(() => {
-      window.location.href = "./buyer-dashboard.html";
-    }, 800);
-  } else {
-    sendRFQToAPI(payload, true);
+    showMessage("Draft saved successfully", "success");
+    redirectDashboard();
+    return;
   }
+
+  await sendRFQ(payload);
 }
 
 async function submitRFQ(e) {
@@ -119,49 +98,29 @@ async function submitRFQ(e) {
 
   const payload = buildRFQPayload("active");
   const error = validateRFQ(payload);
+  if (error) return showMessage(error, "error");
 
-  if (error) {
-    showMessage(error, "error");
+  if (IS_LOCAL) {
+    showMessage("RFQ submitted successfully", "success");
+    redirectDashboard();
     return;
   }
 
-  if (IS_LOCAL) {
-    console.log("🚀 Submit RFQ (LOCAL):", payload);
-    showMessage("RFQ submitted successfully (Local Mode)", "success");
-
-    setTimeout(() => {
-      window.location.href = "./buyer-dashboard.html";
-    }, 800);
-  } else {
-    sendRFQToAPI(payload, false);
-  }
+  await sendRFQ(payload);
 }
 
 /* =========================================================
-   API – PROD MODE
+   API
 ========================================================= */
-/*
-Expected backend:
-POST /api/rfqs
-Authorization: Bearer <token>
-Content-Type: multipart/form-data
-*/
-
-async function sendRFQToAPI(payload, isDraft) {
+async function sendRFQ(payload) {
   try {
-    clearMessage();
-
     const formData = new FormData();
 
-    Object.keys(payload).forEach(key => {
-      if (key === "files") {
-        [...payload.files].forEach(file => {
-          formData.append("files", file);
-        });
+    Object.entries(payload).forEach(([k, v]) => {
+      if (k === "files") {
+        [...v].forEach(f => formData.append("files", f));
       } else {
-        if (payload[key] !== null && payload[key] !== undefined) {
-          formData.append(key, payload[key]);
-        }
+        formData.append(k, v);
       }
     });
 
@@ -177,47 +136,35 @@ async function sendRFQToAPI(payload, isDraft) {
     if (!result.success) throw new Error(result.message);
 
     showMessage(
-      isDraft ? "Draft saved successfully" : "RFQ submitted successfully",
+      payload.status === "draft"
+        ? "Draft saved successfully"
+        : "RFQ submitted successfully",
       "success"
     );
 
-    setTimeout(() => {
-     window.location.href =
-  "/axo-networks/frontend/buyer-dashboard.html";
-    }, 1000);
+    redirectDashboard();
 
   } catch (err) {
-    console.error("❌ RFQ submit failed:", err);
-    showMessage(
-      err.message || "Failed to submit RFQ. Please try again.",
-      "error"
-    );
+    console.error(err);
+    showMessage(err.message || "Failed to submit RFQ", "error");
   }
 }
 
 /* =========================================================
-   NAVIGATION
+   UI HELPERS
 ========================================================= */
-
-function goBack() {
-  window.history.back();
+function redirectDashboard() {
+  setTimeout(() => {
+    window.location.href =
+      "/axo-networks/frontend/buyer-dashboard.html";
+  }, 800);
 }
 
-/* =========================================================
-   STATUS MESSAGE HANDLER
-========================================================= */
-
-function showMessage(text, type = "error") {
+function showMessage(text, type) {
   const box = document.getElementById("statusMessage");
-  if (!box) return;
-
   box.textContent = text;
   box.className = `status-message ${type}`;
   box.style.display = "block";
-
-  setTimeout(() => {
-    box.style.display = "none";
-  }, 4000);
 }
 
 function clearMessage() {

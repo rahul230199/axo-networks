@@ -1,12 +1,14 @@
 /* =========================================================
    ENV MODE CONFIG
 ========================================================= */
+
 const ENV = "local"; // "local" | "prod"
 const IS_LOCAL = ENV === "local";
 
 /* =========================================================
    AUTH / USER
 ========================================================= */
+
 function getUser() {
   return JSON.parse(localStorage.getItem("user"));
 }
@@ -21,12 +23,12 @@ if (IS_LOCAL) {
     localStorage.setItem(
       "user",
       JSON.stringify({
-        id: 1,
-        email: "buyer.local@axonetworks.com",
-        role: "BUYER"
+        id: 22,
+        email: "supplier.local@axonetworks.com",
+        role: "SUPPLIER"
       })
     );
-    localStorage.setItem("token", "LOCAL_DEV_TOKEN");
+    localStorage.setItem("token", "LOCAL_SUPPLIER_TOKEN");
   }
 }
 
@@ -38,8 +40,9 @@ if (!IS_LOCAL) {
 }
 
 /* =========================================================
-   RFQ ID
+   RFQ ID FROM URL
 ========================================================= */
+
 const params = new URLSearchParams(window.location.search);
 const RFQ_ID = params.get("id");
 
@@ -48,36 +51,45 @@ if (!RFQ_ID) {
 }
 
 /* =========================================================
-   INIT
+   DOM READY
 ========================================================= */
-document.addEventListener("DOMContentLoaded", loadRFQDetail);
+
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("quoteForm")
+    .addEventListener("submit", submitQuote);
+
+  loadRFQDetail();
+});
 
 /* =========================================================
-   LOAD DATA
+   LOAD RFQ DETAIL
 ========================================================= */
+
 async function loadRFQDetail() {
   try {
     clearMessage();
 
-    let rfq, files, quotes, messages;
+    let rfq, files, messages, quote;
 
     if (IS_LOCAL) {
-      ({ rfq, files, quotes, messages } = getMockData());
+      ({ rfq, files, messages, quote } = getMockData());
     } else {
-      [rfq, files, quotes, messages] = await Promise.all([
-        api(`/api/rfqs/${RFQ_ID}`),
-        api(`/api/rfqs/${RFQ_ID}/files`),
-        api(`/api/quotes/rfq/${RFQ_ID}`),
-        api(`/api/rfq-messages/${RFQ_ID}`)
+      [rfq, files, messages, quote] = await Promise.all([
+        fetchRFQ(),
+        fetchFiles(),
+        fetchMessages(),
+        fetchMyQuote()
       ]);
     }
 
     renderRFQ(rfq);
     renderFiles(files);
-    renderQuotes(quotes);
     renderMessages(messages);
+    renderQuoteState(quote);
 
     hideSkeletons();
+
   } catch (err) {
     console.error(err);
     showMessage(err.message || "Failed to load RFQ details", "error");
@@ -85,45 +97,49 @@ async function loadRFQDetail() {
 }
 
 /* =========================================================
-   API HELPER
+   API FETCHERS (PROD)
 ========================================================= */
-async function api(url) {
+
+async function api(url, options = {}) {
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${getToken()}` }
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+      ...(options.headers || {})
+    },
+    ...options
   });
+
   const result = await res.json();
   if (!result.success) throw new Error(result.message);
   return result.data;
 }
 
+const fetchRFQ = () => api(`/api/rfqs/${RFQ_ID}`);
+const fetchFiles = () => api(`/api/rfqs/${RFQ_ID}/files`);
+const fetchMessages = () => api(`/api/rfq-messages/${RFQ_ID}`);
+const fetchMyQuote = () => api(`/api/quotes/rfq/${RFQ_ID}/me`);
+
 /* =========================================================
    RENDER RFQ
 ========================================================= */
-function renderRFQ(rfq) {
-  if (rfq.status === "po_issued" && rfq.purchase_order) {
-  const po = rfq.purchase_order;
 
-  document.getElementById("poSection").style.display = "block";
-  document.getElementById("poId").textContent = po.id;
-  document.getElementById("poQty").textContent = po.quantity;
-  document.getElementById("poPrice").textContent = `₹${po.price}`;
-}
+function renderRFQ(rfq) {
   setText("rfqId", rfq.id);
   setText("partName", rfq.part_name);
   setText("totalQty", rfq.total_quantity);
+  setText("deliveryTimeline", rfq.delivery_timeline || "-");
+  setText("ppapLevel", rfq.ppap_level || "-");
+  setText("materialSpec", rfq.material_specification || "-");
 
   const status = document.getElementById("rfqStatus");
   status.textContent = formatStatus(rfq.status);
   status.className = `status-badge ${rfq.status}`;
-
-  setText("deliveryTimeline", rfq.delivery_timeline);
-  setText("ppapLevel", rfq.ppap_level || "-");
-  setText("materialSpec", rfq.material_specification || "-");
 }
 
 /* =========================================================
    FILES
 ========================================================= */
+
 function renderFiles(files) {
   const list = document.getElementById("fileList");
   list.innerHTML = "";
@@ -143,103 +159,90 @@ function renderFiles(files) {
 }
 
 /* =========================================================
-   QUOTES (POLISHED)
+   QUOTE STATE
 ========================================================= */
-function renderQuotes(quotes) {
-  const container = document.getElementById("quotesContainer");
-  container.innerHTML = "";
 
-  if (!quotes.length) {
-    container.innerHTML = `<p class="muted">No quotes received yet</p>`;
+function renderQuoteState(quote) {
+  const form = document.getElementById("quoteForm");
+  if (!quote) return;
+
+  form.querySelectorAll("input, textarea, button").forEach(el => {
+    el.disabled = true;
+  });
+
+  showMessage(
+    quote.status === "accepted"
+      ? "Your quote has been accepted. PO issued."
+      : "You have already submitted a quote.",
+    "success"
+  );
+}
+
+/* =========================================================
+   SUBMIT QUOTE
+========================================================= */
+
+async function submitQuote(e) {
+  e.preventDefault();
+  clearMessage();
+
+  const payload = {
+    rfq_id: RFQ_ID,
+    supplier_id: getUser().id,
+    price: Number(getValue("price")),
+    batch_quantity: Number(getValue("batchQty")),
+    delivery_timeline: getValue("quoteTimeline"),
+    certifications: getValue("certifications")
+  };
+
+  const error = validateQuote(payload);
+  if (error) {
+    showMessage(error, "error");
     return;
   }
 
-  quotes.forEach(q => {
-    container.innerHTML += `
-      <div class="quote-card">
-        <div class="quote-head">
-          Supplier #${q.supplier_name || q.supplier_id}
-        </div>
+  try {
+    if (IS_LOCAL) {
+      showMessage("Quote submitted (LOCAL MODE)", "success");
+      renderQuoteState({ status: "submitted" });
+      return;
+    }
 
-        <div class="quote-grid">
-          <div>
-            <span>Price</span>
-            <strong>₹${q.price}</strong>
-          </div>
-          <div>
-            <span>Qty</span>
-            <strong>${q.batch_quantity}</strong>
-          </div>
-          <div>
-            <span>Delivery</span>
-            <strong>${q.delivery_timeline}</strong>
-          </div>
-        </div>
+    await api("/api/quotes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-        <div class="quote-action">
-          ${
-            q.status === "submitted"
-              ? `<button class="accept-btn" onclick="acceptQuote(${q.id})">
-                   Accept Quote
-                 </button>`
-              : `<span class="status-badge closed">Accepted</span>`
-          }
-        </div>
-      </div>
-    `;
-  });
+    showMessage("Quote submitted successfully", "success");
+    loadRFQDetail();
+
+  } catch (err) {
+    console.error(err);
+    showMessage(err.message || "Failed to submit quote", "error");
+  }
 }
 
 /* =========================================================
    MESSAGES
 ========================================================= */
+
 function renderMessages(messages) {
   const box = document.getElementById("messageList");
   box.innerHTML = "";
 
+  if (!messages.length) return;
+
   messages.forEach(m => {
     box.innerHTML += `
-      <div class="message ${m.sender_id === getUser().id ? "you" : "other"}">
+      <div class="message ${
+        m.sender_id === getUser().id ? "supplier" : "buyer"
+      }">
         ${m.message}
       </div>
     `;
   });
 }
-
-/* =========================================================
-   ACTIONS
-========================================================= */
-async function acceptQuote(quoteId) {
-  try {
-    clearMessage();
-
-    if (IS_LOCAL) {
-      simulatePO();
-      showMessage("Quote accepted. PO created.", "success");
-      return;
-    }
-
-    const res = await fetch(`/api/quotes/${quoteId}/accept`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getToken()}`
-      }
-    });
-
-    const result = await res.json();
-    if (!result.success) throw new Error(result.message);
-
-    showMessage("Quote accepted. Purchase Order issued.", "success");
-
-    // Reload RFQ details (status, PO, quotes)
-    loadRFQDetail();
-
-  } catch (err) {
-    console.error(err);
-    showMessage(err.message || "Failed to accept quote", "error");
-  }
-}
-
 
 async function sendMessage() {
   const input = document.getElementById("messageInput");
@@ -249,25 +252,21 @@ async function sendMessage() {
   try {
     if (IS_LOCAL) {
       input.value = "";
-      showMessage("Message sent (Local Mode)", "success");
+      showMessage("Message sent (LOCAL MODE)", "success");
       return;
     }
 
-    const res = await fetch(`/api/rfq-messages/${RFQ_ID}`, {
+    await api(`/api/rfq-messages/${RFQ_ID}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
     });
 
-    const result = await res.json();
-    if (!result.success) throw new Error(result.message);
-
     input.value = "";
     loadRFQDetail();
+
   } catch (err) {
+    console.error(err);
     showMessage(err.message || "Failed to send message", "error");
   }
 }
@@ -275,6 +274,11 @@ async function sendMessage() {
 /* =========================================================
    HELPERS
 ========================================================= */
+
+function getValue(id) {
+  return document.getElementById(id)?.value.trim();
+}
+
 function setText(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -284,6 +288,14 @@ function setText(id, value) {
 
 function formatStatus(status) {
   return status.replace("_", " ").toUpperCase();
+}
+
+function validateQuote(q) {
+  if (!q.price || q.price <= 0) return "Price must be greater than 0";
+  if (!q.batch_quantity || q.batch_quantity <= 0)
+    return "Batch quantity must be greater than 0";
+  if (!q.delivery_timeline) return "Delivery timeline is required";
+  return null;
 }
 
 function hideSkeletons() {
@@ -296,17 +308,11 @@ function hideSkeletons() {
 function goBack() {
   window.history.back();
 }
-function simulatePO() {
-  document.getElementById("poSection").style.display = "block";
-
-  document.getElementById("poId").textContent = "PO-LOCAL-001";
-  document.getElementById("poQty").textContent = "5000";
-  document.getElementById("poPrice").textContent = "₹120 / unit";
-}
 
 /* =========================================================
    STATUS MESSAGE
 ========================================================= */
+
 function showMessage(text, type = "error") {
   const box = document.getElementById("statusMessage");
   if (!box) return;
@@ -315,7 +321,9 @@ function showMessage(text, type = "error") {
   box.className = `status-message ${type}`;
   box.style.display = "block";
 
-  setTimeout(() => (box.style.display = "none"), 4000);
+  setTimeout(() => {
+    box.style.display = "none";
+  }, 4000);
 }
 
 function clearMessage() {
@@ -324,33 +332,27 @@ function clearMessage() {
 }
 
 /* =========================================================
-   MOCK DATA
+   MOCK DATA (LOCAL MODE)
 ========================================================= */
+
 function getMockData() {
   return {
     rfq: {
       id: RFQ_ID,
       part_name: "Aluminium Housing",
       total_quantity: 5000,
-      delivery_timeline: "4-6 Weeks",
+      delivery_timeline: "4–6 Weeks",
       ppap_level: "Level 3",
       material_specification: "ADC12 Aluminium",
-      status: "quoted"
+      status: "active"
     },
-    files: [{ file_name: "drawing.pdf", file_url: "#" }],
-    quotes: [
-      {
-        id: 1,
-        supplier_id: 22,
-        price: 120,
-        batch_quantity: 1000,
-        delivery_timeline: "5 weeks",
-        status: "submitted"
-      }
+    files: [
+      { file_name: "drawing.pdf", file_url: "#" }
     ],
     messages: [
-      { sender_id: 1, message: "Please confirm tooling cost." },
-      { sender_id: 22, message: "Tooling included in price." }
-    ]
+      { sender_id: 1, message: "Please share tooling details." },
+      { sender_id: 22, message: "Tooling is included in price." }
+    ],
+    quote: null
   };
 }
