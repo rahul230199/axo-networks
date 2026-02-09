@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Supplier Dashboard | AXO Networks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet">
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./styles/supplier-dashboard.css" />
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h2 class="logo">AXO Networks</h2>
+    <span class="role-badge">Supplier</span>
+  </div>
+
+  <div class="user-info">
+    <span id="userEmail" class="truncate"></span>
+    <button class="ghost-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<main class="dashboard">
+
+  <!-- ACTION STRIP -->
+  <section id="actionStrip" class="action-strip hidden"></section>
+
+  <!-- PAGE HEADER -->
+  <section class="page-head">
+    <h1>Supplier Dashboard</h1>
+    <p>Operational overview of RFQs and accepted purchase orders</p>
+  </section>
+
+  <!-- KPI SUMMARY -->
+  <section class="summary" id="summarySection"></section>
+
+  <!-- ANALYTICS -->
+  <section class="charts-section">
+    <div class="chart-card">
+      <h3>Supplier Workload</h3>
+      <canvas id="rfqFunnelChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>RFQ Flow Health</h3>
+      <canvas id="winRateChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Conversion Effectiveness</h3>
+      <canvas id="actionLoadChart"></canvas>
+    </div>
+  </section>
+
+  <!-- RFQ TABLE -->
+  <section class="table-section">
+    <h3>Open Requests for Quotation</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>RFQ ID</th>
+            <th>Part Name</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Last Activity</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rfqTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PO TABLE -->
+  <section class="table-section">
+    <h3>Accepted Purchase Orders</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>PO ID</th>
+            <th>RFQ ID</th>
+            <th>Part Name</th>
+            <th>Quantity</th>
+            <th>Accepted Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="poTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script src="./js/supplier-dashboard.js"></script>
+</body>
+</html>
+

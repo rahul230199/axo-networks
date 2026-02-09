@@ -1,138 +1,133 @@
 require("dotenv").config();
+
+const checkEnv = require("./src/config/envCheck");
+checkEnv();
+
 const express = require("express");
+const path = require("path");
+
+// ✅ SHARED DB POOL
+const pool = require("./src/config/db");
+
+// Swagger
+const swaggerSetup = require("./src/docs/swagger");
+
+// Local seed users
+const { createLocalUsers } = require("./src/seed/localUsers.seed");
+
+// Routes
+const rfqRoutes = require("./routes/rfq.routes");
+const rfqFiles = require("./routes/rfqFiles.routes");
+const quoteRoutes = require("./routes/quote.routes");
+const rfqMessagesRoutes = require("./routes/rfqMessage.routes");
+const purchaseOrderRoutes = require("./routes/purchaseOrder.routes");
+const quoteAcceptanceRoutes = require("./routes/quoteAcceptance.routes");
 const authRoutes = require("./routes/auth.routes");
-const { Pool } = require("pg");
+
+// Middleware
+const errorHandler = require("./middleware/errorHandler.middleware");
+
+// Services
+const { createUsersFromRequest } = require("./services/userProvisioningService");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* ======================================================
-   POSTGRES CONNECTION
-====================================================== */
-const pool = new Pool({
-  host: process.env.PGHOST || "localhost",
-  database: process.env.PGDATABASE || "axo_networks",
-  user: process.env.PGUSER || "postgres",
-  password: process.env.PGPASSWORD || "",
-  port: process.env.PGPORT || 5432,
-});
+/* ===================== SWAGGER ===================== */
+swaggerSetup(app);
 
-/* ======================================================
-   MIDDLEWARE
-====================================================== */
+/* ===================== MIDDLEWARE ===================== */
 app.use(express.json());
 
+/* ---------- SAFE CORS (LOCAL + PROD) ---------- */
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://www.axonetworks.com"
+];
+
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") return res.sendStatus(200);
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 });
 
-/* ======================================================
-   ROUTES
-====================================================== */
+/* ===================== FRONTEND ===================== */
+// ✅ Serve frontend FIRST
+app.use(express.static(path.join(__dirname, "frontend")));
+
+app.get("/", (_, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "login.html"));
+});
+
+app.get("/login", (_, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "login.html"));
+});
+
+app.get("/buyer-dashboard", (_, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "buyer-dashboard.html"));
+});
+
+
+app.get("/admin-dashboard", (_, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "admin-dashboard.html"));
+});
+
+/* ===================== API ROUTES ===================== */
 app.use("/api/auth", authRoutes);
+app.use("/api/rfqs", rfqRoutes);
+app.use("/api/rfq-files", rfqFiles);
+app.use("/api/quotes", quoteRoutes);
+app.use("/api/quotes", quoteAcceptanceRoutes);
+app.use("/api/rfq-messages", rfqMessagesRoutes);
+app.use("/api/purchase-orders", purchaseOrderRoutes);
 
+/* ===================== HEALTH CHECK ===================== */
+app.get("/api/_health", async (_, res) => {
+  let dbStatus = "up";
+  let dbTime = null;
 
-/* ======================================================
-   DB INIT
-====================================================== */
-(async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS network_access_requests (
-        id SERIAL PRIMARY KEY,
-        company_name VARCHAR(255) NOT NULL,
-        website VARCHAR(255),
-        registered_address TEXT,
-        city_state VARCHAR(255) NOT NULL,
-        contact_name VARCHAR(255) NOT NULL,
-        role VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        phone VARCHAR(50) NOT NULL,
-        what_you_do JSONB NOT NULL,
-        primary_product TEXT NOT NULL,
-        key_components TEXT NOT NULL,
-        manufacturing_locations TEXT NOT NULL,
-        monthly_capacity VARCHAR(100) NOT NULL,
-        certifications TEXT,
-        role_in_ev VARCHAR(50) NOT NULL,
-        why_join_axo TEXT NOT NULL,
-        submission_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        status VARCHAR(20) DEFAULT 'pending',
-        verification_notes TEXT
-      );
-    `);
-
-    console.log("✅ Database ready");
-  } catch (err) {
-    console.error("❌ DB init error:", err.message);
-  }
-})();
-
-/* ======================================================
-   HEALTH CHECK
-====================================================== */
-app.get("/api/_health", async (req, res) => {
   try {
     const r = await pool.query("SELECT NOW()");
-    res.json({ status: "up", dbTime: r.rows[0].now });
-  } catch (e) {
-    res.status(500).json({ status: "down", error: e.message });
-  }
-});
-
-/* ======================================================
-   GET ALL REQUESTS (ADMIN DASHBOARD)
-====================================================== */
-app.get("/api/network-request", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT *,
-      EXTRACT(EPOCH FROM submission_timestamp) * 1000 AS submitted_at_ms
-      FROM network_access_requests
-      ORDER BY submission_timestamp DESC
-    `);
-
-    res.json({
-      success: true,
-      data: result.rows.map(r => ({
-        ...r,
-        submittedAt: new Date(Number(r.submitted_at_ms)).toISOString()
-      }))
-    });
+    dbTime = r.rows[0].now;
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error("❌ DB not reachable:", err.message);
+    dbStatus = "down";
   }
+
+  res.json({
+    status: "up",
+    dbStatus,
+    dbTime
+  });
 });
 
-/* ======================================================
-   GET SINGLE REQUEST (VIEW MODAL)
-====================================================== */
-app.get("/api/network-request/:id", async (req, res) => {
+/* ===================== NETWORK ACCESS ===================== */
+app.get("/api/network-request", async (_, res, next) => {
   try {
     const r = await pool.query(
-      "SELECT * FROM network_access_requests WHERE id=$1",
-      [req.params.id]
+      `SELECT * FROM network_access_requests 
+       ORDER BY submission_timestamp DESC`
     );
-    if (!r.rows.length) {
-      return res.status(404).json({ success: false });
-    }
-    res.json({ success: true, data: r.rows[0] });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
+    res.json({ success: true, data: r.rows });
+  } catch (err) {
+    next(err);
   }
 });
 
-/* ======================================================
-   POST NETWORK REQUEST (FORM SUBMIT)
-====================================================== */
-app.post("/api/network-request", async (req, res) => {
+app.post("/api/network-request", async (req, res, next) => {
   try {
-    console.log("📥 POST /api/network-request");
-
     const {
       companyName, website, registeredAddress, cityState,
       contactName, role, email, phone, whatYouDo,
@@ -140,19 +135,7 @@ app.post("/api/network-request", async (req, res) => {
       monthlyCapacity, certifications, roleInEV, whyJoinAXO
     } = req.body;
 
-    if (
-      !companyName || !cityState || !contactName || !role ||
-      !email || !phone || !whatYouDo || !primaryProduct ||
-      !keyComponents || !manufacturingLocations ||
-      !monthlyCapacity || !roleInEV || !whyJoinAXO
-    ) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required fields"
-      });
-    }
-
-    const result = await pool.query(
+    const r = await pool.query(
       `INSERT INTO network_access_requests (
         company_name, website, registered_address, city_state,
         contact_name, role, email, phone, what_you_do,
@@ -161,8 +144,7 @@ app.post("/api/network-request", async (req, res) => {
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,
         $10,$11,$12,$13,$14,$15,$16
-      )
-      RETURNING id`,
+      ) RETURNING id`,
       [
         companyName,
         website || null,
@@ -183,21 +165,14 @@ app.post("/api/network-request", async (req, res) => {
       ]
     );
 
-    res.status(201).json({
-      success: true,
-      id: result.rows[0].id
-    });
-
+    res.json({ success: true, id: r.rows[0].id });
   } catch (err) {
-    console.error("❌ POST error:", err.message);
-    res.status(500).json({ success: false, error: err.message });
+    next(err);
   }
 });
 
-/* ======================================================
-   UPDATE STATUS (APPROVE / REJECT)
-====================================================== */
-app.put("/api/network-request/:id/status", async (req, res) => {
+/* ===================== APPROVE / REJECT ===================== */
+app.put("/api/network-request/:id/status", async (req, res, next) => {
   try {
     const { status, verificationNotes } = req.body;
 
@@ -205,7 +180,7 @@ app.put("/api/network-request/:id/status", async (req, res) => {
       `UPDATE network_access_requests
        SET status=$1, verification_notes=$2
        WHERE id=$3
-       RETURNING id,status`,
+       RETURNING *`,
       [status, verificationNotes || null, req.params.id]
     );
 
@@ -213,16 +188,28 @@ app.put("/api/network-request/:id/status", async (req, res) => {
       return res.status(404).json({ success: false });
     }
 
-    res.json({ success: true, data: r.rows[0] });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
+    // ✅ Create user ONLY on verification
+    if (status === "verified") {
+      await createUsersFromRequest(pool, r.rows[0]);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
   }
 });
 
-/* ======================================================
-   START SERVER
-====================================================== */
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+/* ===================== ERROR HANDLER (LAST) ===================== */
+app.use(errorHandler);
 
+/* ===================== LOCAL SEED USERS ===================== */
+if (process.env.NODE_ENV === "development") {
+  createLocalUsers(pool).catch(err => {
+    console.error("❌ Failed to create local users:", err.message);
+  });
+}
+
+/* ===================== START SERVER ===================== */
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});

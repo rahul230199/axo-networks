@@ -1,0 +1,412 @@
+/* =====================================================
+   ROOT VARIABLES
+===================================================== */
+:root {
+  --primary: #1e3a8a;
+  --primary-light: #3b82f6;
+  --primary-dark: #1e40af;
+  --secondary: #10b981;
+
+  --foreground: #111827;
+  --foreground-light: #374151;
+
+  --background: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.88);
+
+  --light-grey: #f9fafb;
+  --grey: #e5e7eb;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 18px 48px rgba(0,0,0,0.12);
+
+  --transition: all 0.25s ease;
+}
+
+/* =====================================================
+   RESET
+===================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  background: linear-gradient(180deg, #f8fafc, #eef2f7);
+  color: var(--foreground);
+}
+
+/* =====================================================
+   HEADER (MOBILE SAFE)
+===================================================== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--grey);
+
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.logo {
+  font-family: "Outfit", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.role-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-info span {
+  font-size: 11px;
+  color: var(--foreground-light);
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-info button {
+  background: var(--foreground);
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* =====================================================
+   MAIN LAYOUT
+===================================================== */
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 14px 72px;
+}
+
+/* =====================================================
+   SUMMARY (MOBILE FIRST)
+===================================================== */
+.summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.card {
+  background: var(--background);
+  border: 1px solid var(--grey);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card h3 {
+  font-size: 12px;
+  color: var(--foreground-light);
+}
+
+.card p {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+/* =====================================================
+   RFQ PIPELINE (FIXED MOBILE)
+===================================================== */
+.pipeline {
+  margin-top: 24px;
+}
+
+.pipeline h3 {
+  font-family: "Outfit", sans-serif;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.pipeline-track {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.pipeline-step {
+  background: var(--background);
+  border: 1px dashed var(--grey);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.pipeline-step .count {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.pipeline-step .label {
+  font-size: 11px;
+  margin-top: 2px;
+  color: var(--foreground-light);
+}
+
+/* =====================================================
+   CREATE RFQ BUTTON
+===================================================== */
+.actions {
+  margin: 20px 0 28px;
+  display: flex;
+  justify-content: center;
+}
+
+.actions button {
+  width: 100%;
+  max-width: 260px;
+  padding: 14px;
+
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+
+  box-shadow: 0 10px 24px rgba(30,58,138,0.35);
+  transition: var(--transition);
+}
+
+.actions button:hover {
+  transform: translateY(-2px);
+}
+
+/* =====================================================
+   TABLE (MOBILE SAFE)
+===================================================== */
+.table-section {
+  margin-top: 24px;
+  overflow-x: auto;
+}
+
+.table-section h3 {
+  font-family: "Outfit", sans-serif;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--background);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+thead th {
+  background: var(--foreground);
+  color: #fff;
+  font-size: 12px;
+  padding: 12px;
+  text-align: left;
+}
+
+tbody td {
+  padding: 14px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--grey);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status */
+.status {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status.draft { background: #fef3c7; color: #92400e; }
+.status.active { background: #dbeafe; color: #1e40af; }
+.status.submitted { background: #ede9fe; color: #5b21b6; }
+.status.closed { background: #dcfce7; color: #166534; }
+
+table button {
+  background: var(--secondary);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+/* =====================================================
+   TABLET
+===================================================== */
+@media (min-width: 768px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pipeline-track {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .actions {
+    justify-content: flex-end;
+  }
+
+  .actions button {
+    width: auto;
+    padding: 14px 22px;
+  }
+}
+
+/* =====================================================
+   DESKTOP
+===================================================== */
+@media (min-width: 1024px) {
+  .summary {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .pipeline-track {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+  .user-info span {
+    max-width: none;
+  }
+}
+/* =====================
+   SUMMARY – MOBILE 2×2 FIX
+===================== */
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 🔑 2×2 on mobile */
+  gap: 12px;
+}
+
+.card {
+  background: var(--background);
+  border: 1px solid var(--grey);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card h3 {
+  font-size: 12px;
+  color: var(--foreground-light);
+}
+
+.card p {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+/* =====================
+   TABLET
+===================== */
+@media (min-width: 768px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr); /* stays 2×2 */
+  }
+}
+
+/* =====================
+   DESKTOP
+===================== */
+@media (min-width: 1024px) {
+  .summary {
+    grid-template-columns: repeat(4, 1fr); /* 4 in a row */
+  }
+}
+/* =====================
+   GLASS SKELETON LOADER
+===================== */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(229, 231, 235, 0.6);
+  border-radius: var(--radius-sm);
+}
+
+/* shimmer layer */
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.6) 45%,
+    rgba(255, 255, 255, 0.6) 55%,
+    transparent 70%
+  );
+  animation: skeleton-shimmer 1.4s infinite;
+}
+
+/* Glass blur effect */
+.card .skeleton,
+.pipeline-step .skeleton,
+.table-section .skeleton {
+  backdrop-filter: blur(8px);
+}
+
+/* Animation */
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton.fade-out {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}

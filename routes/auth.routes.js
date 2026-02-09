@@ -1,104 +1,137 @@
 const express = require("express");
-const router = express.Router();
 const jwt = require("jsonwebtoken");
-const AuthService = require("../services/AuthService");
-const PasswordResetService = require("../services/PasswordResetService");
+const bcrypt = require("bcrypt");
+const pool = require("../src/config/db");
 
-// Login endpoint
+const router = express.Router();
+
+console.log("✅ auth.routes.js loaded");
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET =
+  process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+
+/* ================= TOKEN HELPERS ================= */
+function generateAccessToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "8h" });
+}
+
+function generateRefreshToken(payload) {
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: "14d" });
+}
+
+/* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password, newPassword } = req.body;
+    const { email, password } = req.body;
+    console.log("🔐 Login attempt:", email);
 
-    console.log("🔐 LOGIN ATTEMPT:", { email, hasNewPassword: !!newPassword });
-
-    // Try admin login first
-    const adminResult = await AuthService.adminLogin(email, password);
-    if (adminResult) {
-      return res.json(adminResult);
-    }
-
-    // User login
-    const userResult = await AuthService.userLogin(email, password, newPassword);
-
-    if (userResult.success) {
-      res.json(userResult);
-    } else {
-      res.status(401).json(userResult);
-    }
-
-  } catch (error) {
-    console.error("🔥 Login endpoint error:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Force password reset (for first-time users)
-router.post("/force-reset-password", async (req, res) => {
-  try {
-    const { email, newPassword } = req.body;
-    const result = await PasswordResetService.forceResetPassword(email, newPassword);
-
-    if (result.success) {
-      res.json(result);
-    } else {
-      res.status(400).json(result);
-    }
-  } catch (error) {
-    console.error("❌ Force password reset endpoint error:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Auth status
-router.get("/status", async (req, res) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.json({
-        authenticated: false,
-        message: "No token provided"
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password required",
       });
     }
 
-    const result = await AuthService.verifyToken(token);
-    res.json(result);
-  } catch (error) {
-    console.error("Auth status error:", error);
+    const result = await pool.query(
+      `SELECT id, email, password_hash, role, status
+       FROM users
+       WHERE email = $1`,
+      [email.toLowerCase()]
+    );
+
+    if (!result.rows.length) {
+      console.log("❌ User not found");
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const user = result.rows[0];
+
+    if (user.status !== "active") {
+      console.log("❌ User inactive");
+      return res.status(401).json({
+        success: false,
+        message: "Account inactive",
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
+
+    if (!passwordMatch) {
+      console.log("❌ Password mismatch");
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      role: user.role,
+    });
+
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      role: user.role,
+    });
+
+    console.log("✅ Login success:", user.email);
+
     res.json({
-      authenticated: false,
-      message: "Server error"
+      success: true,
+      token: accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+   console.error("❌ LOGIN ERROR:", err.message);
+  return res.status(500).json({
+    success: false,
+    message: "Database connection failed"
     });
   }
 });
 
-// Get user profile
-router.get("/profile", async (req, res) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ success: false, message: "No token provided" });
-    }
+/* ================= REFRESH TOKEN ================= */
+router.post("/refresh-token", (req, res) => {
+  const { refreshToken } = req.body;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
-    const result = await AuthService.getProfile(decoded.userId);
-    
-    if (result.success) {
-      res.json(result);
-    } else {
-      res.status(404).json(result);
-    }
-  } catch (error) {
-    console.error("Profile error:", error);
-    res.status(500).json({ success: false, error: error.message });
+  if (!refreshToken) {
+    return res.status(400).json({
+      success: false,
+      message: "Refresh token required",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+
+    const newAccessToken = generateAccessToken({
+      userId: decoded.userId,
+      role: decoded.role,
+    });
+
+    res.json({
+      success: true,
+      token: newAccessToken,
+    });
+  } catch {
+    res.status(401).json({
+      success: false,
+      message: "Invalid refresh token",
+    });
   }
 });
 
 module.exports = router;
+
