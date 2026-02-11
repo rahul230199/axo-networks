@@ -2,67 +2,149 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Create RFQ | AXO Networks</title>
-  <link rel="stylesheet" href="./styles/buyerdashboard.css" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/rfq-create.css" />
 </head>
+
 <body>
 
-  <!-- HEADER -->
-  <header class="header">
-    <h2>Create RFQ</h2>
-    <div class="user-info">
-      <button onclick="goBack()">← Back</button>
+  <!-- ================= TOP BAR ================= -->
+  <header class="topbar">
+    <div class="logo">AXO Networks</div>
+
+    <div class="topbar-right">
+      <span id="userEmail"></span>
+      <button class="secondary-btn" onclick="goBack()">Back</button>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </header>
 
-  <!-- FORM -->
-  <section class="table-section">
-    <form id="rfqForm" class="card">
+  <!-- ================= MAIN ================= -->
+  <main class="page-wrapper">
 
-      <h3>RFQ Details</h3>
+    <div class="page-header">
+      <h1>Create New RFQ</h1>
+      <p class="subtitle">
+        Submit detailed part requirements for supplier quotations.
+      </p>
+    </div>
 
-      <label>Part Name</label>
-      <input type="text" id="part_name" required />
+    <!-- ================= FORM ================= -->
+    <form id="rfqForm" class="rfq-form" novalidate>
 
-      <label>Part ID</label>
-      <input type="text" id="part_id" required />
+      <!-- ===== SECTION 1: BASIC INFO ===== -->
+      <section class="form-section">
+        <h2>Basic Information</h2>
 
-      <label>Total Quantity</label>
-      <input type="number" id="total_quantity" required />
+        <div class="form-grid">
 
-      <label>Batch Quantity</label>
-      <input type="number" id="batch_quantity" required />
+          <div class="form-group">
+            <label for="part_name">Part Name *</label>
+            <input type="text" id="part_name" name="part_name" required />
+            <span class="error-text"></span>
+          </div>
 
-      <label>Target Price (Optional)</label>
-      <input type="number" id="target_price" />
+          <div class="form-group">
+            <label for="part_id">Part ID / Code *</label>
+            <input type="text" id="part_id" name="part_id" required />
+            <span class="error-text"></span>
+          </div>
 
-      <label>Delivery Timeline</label>
-      <input type="text" id="delivery_timeline" placeholder="e.g. 60 days" required />
+        </div>
+      </section>
 
-      <label>Material Specification</label>
-      <input type="text" id="material_specification" required />
+      <!-- ===== SECTION 2: QUANTITY & PRICING ===== -->
+      <section class="form-section">
+        <h2>Quantity & Pricing</h2>
 
-      <label>PPAP Level</label>
-      <select id="ppap_level" required>
-        <option value="">Select</option>
-        <option value="Level 1">Level 1</option>
-        <option value="Level 2">Level 2</option>
-        <option value="Level 3">Level 3</option>
-        <option value="Level 4">Level 4</option>
-        <option value="Level 5">Level 5</option>
-      </select>
+        <div class="form-grid">
 
-      <br /><br />
-      <button type="submit">Create RFQ</button>
+          <div class="form-group">
+            <label for="total_quantity">Total Quantity *</label>
+            <input type="number" id="total_quantity" name="total_quantity" min="1" required />
+            <span class="error-text"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="batch_quantity">Batch Quantity *</label>
+            <input type="number" id="batch_quantity" name="batch_quantity" min="1" required />
+            <span class="error-text"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="target_price">Target Price (Optional)</label>
+            <input type="number" step="0.01" id="target_price" name="target_price" />
+          </div>
+
+          <div class="form-group">
+            <label for="delivery_timeline">Delivery Timeline *</label>
+            <input type="text" id="delivery_timeline" name="delivery_timeline" placeholder="e.g. 6-8 Weeks" required />
+            <span class="error-text"></span>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ===== SECTION 3: TECHNICAL DETAILS ===== -->
+      <section class="form-section">
+        <h2>Technical Specifications</h2>
+
+        <div class="form-grid">
+
+          <div class="form-group full-width">
+            <label for="material_specification">Material Specification *</label>
+            <textarea id="material_specification" name="material_specification" rows="4" required></textarea>
+            <span class="error-text"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="ppap_level">PPAP Level *</label>
+            <select id="ppap_level" name="ppap_level" required>
+              <option value="">Select Level</option>
+              <option value="Level 1">Level 1</option>
+              <option value="Level 2">Level 2</option>
+              <option value="Level 3">Level 3</option>
+              <option value="Level 4">Level 4</option>
+              <option value="Level 5">Level 5</option>
+            </select>
+            <span class="error-text"></span>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ===== SECTION 4: FILE UPLOAD ===== -->
+      <section class="form-section">
+        <h2>Technical Drawings / Documents</h2>
+
+        <div class="form-group full-width">
+          <label for="rfq_files">Upload Files (PDF / STEP / DOCX)</label>
+          <input type="file" id="rfq_files" name="rfq_files" multiple />
+          <small class="helper-text">
+            Max 10MB per file. Allowed formats: PDF, STEP, DOCX.
+          </small>
+        </div>
+      </section>
+
+      <!-- ===== ACTIONS ===== -->
+      <div class="form-actions">
+        <button type="button" class="secondary-btn" id="saveDraftBtn">
+          Save as Draft
+        </button>
+
+        <button type="submit" class="primary-btn">
+          Submit RFQ
+        </button>
+      </div>
 
     </form>
-  </section>
 
-  <script>
-    function goBack() {
-      window.location.href = "buyer-dashboard.html";
-    }
-  </script>
-<script src="./js/rfq-create.js"></script>
+  </main>
+
+  <!-- JS -->
+  <script src="./js/rfq-create.js"></script>
 </body>
 </html>

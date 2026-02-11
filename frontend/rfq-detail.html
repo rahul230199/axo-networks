@@ -2,106 +2,161 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RFQ Detail | AXO Networks</title>
-  <link rel="stylesheet" href="./styles/buyerdashboard.css" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/rfq-detail.css" />
 </head>
+
 <body>
 
-  <!-- HEADER -->
-  <header class="header">
-    <h2>RFQ Details</h2>
-    <div class="user-info">
-      <button onclick="goBack()">← Back</button>
+  <!-- ================= TOPBAR ================= -->
+  <header class="topbar">
+    <div class="logo">AXO Networks</div>
+
+    <div class="topbar-right">
+      <span id="userEmail"></span>
+      <button class="secondary-btn" onclick="goBack()">Back</button>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </header>
 
-  <!-- RFQ SUMMARY -->
-  <section class="summary">
-    <div class="card">
-      <h3>Part Name</h3>
-      <p id="partName">-</p>
-    </div>
+  <!-- ================= MAIN ================= -->
+  <main class="page-wrapper">
 
-    <div class="card">
-      <h3>Total Quantity</h3>
-      <p id="totalQty">-</p>
-    </div>
+    <!-- ===== HEADER INFO ===== -->
+    <section class="rfq-header-card">
 
-    <div class="card">
-      <h3>Status</h3>
-      <p id="rfqStatus">-</p>
-    </div>
-  </section>
-
-  <!-- RFQ DETAILS -->
-  <section class="table-section">
-    <div class="card">
-      <h3>RFQ Information</h3>
-
-      <p><b>Part ID:</b> <span id="partId">-</span></p>
-      <p><b>Batch Quantity:</b> <span id="batchQty">-</span></p>
-      <p><b>Delivery Timeline:</b> <span id="deliveryTimeline">-</span></p>
-      <p><b>Material Specification:</b> <span id="materialSpec">-</span></p>
-      <p><b>PPAP Level:</b> <span id="ppapLevel">-</span></p>
-    </div>
-  </section>
-
-  <!-- RFQ FILES -->
-  <section class="table-section">
-    <div class="card">
-      <h3>RFQ Files</h3>
-      <ul id="rfqFiles">
-        <li>No files uploaded</li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- QUOTES -->
-  <section class="table-section">
-    <h3>Supplier Quotes</h3>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Supplier</th>
-          <th>Price</th>
-          <th>Batch Qty</th>
-          <th>Delivery</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="quotesTable">
-        <tr>
-          <td colspan="6">No quotes yet</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- MESSAGES -->
-  <section class="table-section">
-    <div class="card">
-      <h3>Messages</h3>
-
-      <div id="messagesBox" style="max-height:200px; overflow-y:auto;">
-        <p>No messages yet</p>
+      <div class="rfq-header-left">
+        <h1 id="rfqPartName">Loading...</h1>
+        <p class="rfq-meta">
+          RFQ ID: <span id="rfqId">-</span>
+          • Created: <span id="rfqCreated">-</span>
+        </p>
       </div>
 
-      <br />
+      <div class="rfq-header-right">
+        <span id="rfqStatus" class="status-badge">DRAFT</span>
+      </div>
 
-      <textarea id="messageInput" rows="3" placeholder="Type a message..."></textarea>
-      <br /><br />
-      <button onclick="sendMessage()">Send Message</button>
-    </div>
-  </section>
+    </section>
 
-  <script>
-    function goBack() {
-      window.location.href = "buyer-dashboard.html";
-    }
-  </script>
-<script src="./js/rfq-detail.js"></script>
+    <!-- ===== RFQ DETAILS GRID ===== -->
+    <section class="rfq-details-grid">
+
+      <!-- BASIC INFO -->
+      <div class="detail-card">
+        <h3>Basic Information</h3>
+
+        <div class="detail-row">
+          <span>Part ID</span>
+          <strong id="detailPartId">-</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Total Quantity</span>
+          <strong id="detailTotalQty">-</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Batch Quantity</span>
+          <strong id="detailBatchQty">-</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Target Price</span>
+          <strong id="detailTargetPrice">-</strong>
+        </div>
+      </div>
+
+      <!-- TECHNICAL INFO -->
+      <div class="detail-card">
+        <h3>Technical Specifications</h3>
+
+        <div class="detail-row">
+          <span>Delivery Timeline</span>
+          <strong id="detailDelivery">-</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>PPAP Level</span>
+          <strong id="detailPpap">-</strong>
+        </div>
+
+        <div class="detail-row full-width">
+          <span>Material Specification</span>
+          <p id="detailMaterial" class="material-text">-</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== FILES SECTION ===== -->
+    <section class="rfq-files-card">
+      <h3>Technical Documents</h3>
+
+      <ul id="rfqFilesList" class="files-list">
+        <li class="loading-row">Loading files...</li>
+      </ul>
+    </section>
+
+    <!-- ===== QUOTES SECTION ===== -->
+    <section class="rfq-quotes-card">
+
+      <div class="quotes-header">
+        <h3>Supplier Quotes</h3>
+        <span id="quoteCount" class="quote-count">0 Quotes</span>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Price</th>
+              <th>Batch Qty</th>
+              <th>Delivery</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="quotesTableBody">
+            <tr>
+              <td colspan="6" class="loading-row">
+                Loading quotes...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- ===== MESSAGE SECTION (PREPARED) ===== -->
+    <section class="rfq-message-card">
+      <h3>Communication</h3>
+
+      <div id="messagesContainer" class="messages-container">
+        <div class="loading-row">Loading messages...</div>
+      </div>
+
+      <div class="message-input-row">
+        <textarea id="messageInput"
+          placeholder="Type message to supplier..."
+        ></textarea>
+
+        <button id="sendMessageBtn" class="primary-btn">
+          Send
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- JS -->
+  <script src="./js/rfq-detail.js"></script>
 
 </body>
 </html>

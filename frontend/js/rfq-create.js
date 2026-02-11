@@ -1,175 +1,225 @@
 /* =========================================================
-   AUTH HELPERS
+   AXO RFQ CREATE – ENTERPRISE PRODUCTION JS
 ========================================================= */
+
+/* ================= AUTH HELPERS ================= */
+
 function getUser() {
-  try {
-    return JSON.parse(localStorage.getItem("user"));
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(localStorage.getItem("user")); }
+  catch { return null; }
 }
 
 function getToken() {
   return localStorage.getItem("token");
 }
 
-/* =========================================================
-   AUTH GUARD
-========================================================= */
-document.addEventListener("DOMContentLoaded", () => {
+/* ================= AUTH GUARD ================= */
+
+(function authGuard() {
   const user = getUser();
   const token = getToken();
 
-  if (!user || !token || user.role !== "BUYER") {
-    window.location.href = "/login";
-    return;
+  if (!user || !token || user.role?.toLowerCase() !== "buyer") {
+    window.location.href = "/frontend/login.html";
   }
+})();
 
-  document
-    .getElementById("rfqForm")
-    .addEventListener("submit", submitRFQ);
+/* ================= INIT ================= */
 
-  document
-    .getElementById("saveDraftBtn")
-    .addEventListener("click", saveDraft);
+let isSubmitting = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const user = getUser();
+  document.getElementById("userEmail").textContent = user.email;
+
+  const form = document.getElementById("rfqForm");
+  const draftBtn = document.getElementById("saveDraftBtn");
+
+  form.addEventListener("submit", (e) => handleSubmit(e, "submitted"));
+  draftBtn.addEventListener("click", (e) => handleSubmit(e, "draft"));
 });
 
 /* =========================================================
-   PAYLOAD BUILDER
+   MAIN SUBMIT HANDLER
 ========================================================= */
-function buildRFQPayload(status) {
-  return {
-    part_name: value("partName"),
-    part_id: value("partId"),
-    total_quantity: Number(value("totalQuantity")),
-    batch_quantity: Number(value("batchQuantity")) || null,
-    target_price: Number(value("targetPrice")) || null,
-    delivery_timeline: value("deliveryTimeline"),
-    material_specification: value("materialSpec") || null,
-    ppap_level: value("ppapLevel") || null,
-    status,
-    files: document.getElementById("rfqFiles").files
-  };
+
+async function handleSubmit(event, status) {
+
+  event.preventDefault();
+
+  if (isSubmitting) return;
+
+  clearErrors();
+
+  const formData = collectFormData(status);
+
+  if (!validateForm(formData)) return;
+
+  try {
+    isSubmitting = true;
+    setLoadingState(true);
+
+    const response = await fetch("/api/rfqs", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${getToken()}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      window.location.href = "/frontend/login.html";
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Server error");
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || "Submission failed");
+    }
+
+    window.location.href = "/frontend/buyer-dashboard.html";
+
+  } catch (error) {
+    showFormError("Unable to submit RFQ. Please try again.");
+  } finally {
+    isSubmitting = false;
+    setLoadingState(false);
+  }
 }
 
-const value = id =>
-  document.getElementById(id)?.value.trim();
+/* =========================================================
+   DATA COLLECTION
+========================================================= */
+
+function collectFormData(status) {
+
+  return {
+    part_name: sanitize(document.getElementById("part_name").value),
+    part_id: sanitize(document.getElementById("part_id").value),
+    total_quantity: Number(document.getElementById("total_quantity").value),
+    batch_quantity: Number(document.getElementById("batch_quantity").value),
+    target_price: document.getElementById("target_price").value || null,
+    delivery_timeline: sanitize(document.getElementById("delivery_timeline").value),
+    material_specification: sanitize(document.getElementById("material_specification").value),
+    ppap_level: document.getElementById("ppap_level").value,
+    status
+  };
+}
 
 /* =========================================================
    VALIDATION
 ========================================================= */
-function validateRFQ(p) {
-  if (!p.part_name) return "Part name is required";
-  if (!p.part_id) return "Part ID is required";
-  if (!p.total_quantity || p.total_quantity <= 0)
-    return "Total quantity must be greater than 0";
-  if (!p.delivery_timeline)
-    return "Delivery timeline is required";
-  return null;
-}
 
-/* =========================================================
-   ACTIONS
-========================================================= */
-async function saveDraft() {
-  clearMessage();
+function validateForm(data) {
 
-  const payload = buildRFQPayload("draft");
+  let valid = true;
 
-  // Drafts can be partial
-  payload.delivery_timeline =
-    payload.delivery_timeline || "TBD";
-
-  await sendRFQ(payload);
-}
-
-async function submitRFQ(e) {
-  e.preventDefault();
-  clearMessage();
-
-  const payload = buildRFQPayload("active");
-  const error = validateRFQ(payload);
-
-  if (error) {
-    showMessage(error, "error");
-    return;
+  if (!data.part_name) {
+    setFieldError("part_name", "Part name is required");
+    valid = false;
   }
 
-  await sendRFQ(payload);
-}
-
-/* =========================================================
-   API CALL
-========================================================= */
-async function sendRFQ(payload) {
-  try {
-    const formData = new FormData();
-
-    Object.entries(payload).forEach(([key, value]) => {
-      if (key === "files") {
-        [...value].forEach(file =>
-          formData.append("files", file)
-        );
-      } else {
-        formData.append(key, value);
-      }
-    });
-
-    const res = await fetch("/api/rfqs", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: formData
-    });
-
-    const result = await res.json();
-
-    if (!result.success) {
-      throw new Error(result.message || "Request failed");
-    }
-
-    showMessage(
-      payload.status === "draft"
-        ? "Draft saved successfully"
-        : "RFQ submitted successfully",
-      "success"
-    );
-
-    redirectDashboard();
-
-  } catch (err) {
-    console.error(err);
-    showMessage(
-      err.message || "Failed to submit RFQ",
-      "error"
-    );
+  if (!data.part_id) {
+    setFieldError("part_id", "Part ID is required");
+    valid = false;
   }
+
+  if (!data.total_quantity || data.total_quantity <= 0) {
+    setFieldError("total_quantity", "Enter valid total quantity");
+    valid = false;
+  }
+
+  if (!data.batch_quantity || data.batch_quantity <= 0) {
+    setFieldError("batch_quantity", "Enter valid batch quantity");
+    valid = false;
+  }
+
+  if (!data.delivery_timeline) {
+    setFieldError("delivery_timeline", "Delivery timeline required");
+    valid = false;
+  }
+
+  if (!data.material_specification) {
+    setFieldError("material_specification", "Material specification required");
+    valid = false;
+  }
+
+  if (!data.ppap_level) {
+    setFieldError("ppap_level", "Select PPAP level");
+    valid = false;
+  }
+
+  return valid;
 }
 
 /* =========================================================
    UI HELPERS
 ========================================================= */
-function redirectDashboard() {
-  setTimeout(() => {
-    window.location.href = "/buyer-dashboard";
-  }, 800);
+
+function setFieldError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  const errorSpan = field.parentElement.querySelector(".error-text");
+
+  if (errorSpan) {
+    errorSpan.textContent = message;
+  }
+
+  field.style.borderColor = "#dc2626";
 }
 
-function showMessage(text, type = "error") {
-  const box = document.getElementById("statusMessage");
-  if (!box) return;
-
-  box.textContent = text;
-  box.className = `status-message ${type}`;
-  box.style.display = "block";
-
-  setTimeout(() => {
-    box.style.display = "none";
-  }, 4000);
+function clearErrors() {
+  document.querySelectorAll(".error-text").forEach(el => el.textContent = "");
+  document.querySelectorAll("input, textarea, select")
+    .forEach(el => el.style.borderColor = "");
 }
 
-function clearMessage() {
-  const box = document.getElementById("statusMessage");
-  if (box) box.style.display = "none";
+function showFormError(message) {
+  const banner = document.createElement("div");
+  banner.className = "form-global-error";
+  banner.textContent = message;
+
+  const form = document.getElementById("rfqForm");
+  form.prepend(banner);
+
+  setTimeout(() => banner.remove(), 4000);
+}
+
+function setLoadingState(loading) {
+  const submitBtn = document.querySelector(".primary-btn");
+
+  if (loading) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+  } else {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit RFQ";
+  }
+}
+
+/* =========================================================
+   SECURITY SANITIZATION
+========================================================= */
+
+function sanitize(value) {
+  return String(value).replace(/[<>&"']/g, "").trim();
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function goBack() {
+  window.location.href = "/frontend/buyer-dashboard.html";
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "/frontend/login.html";
 }

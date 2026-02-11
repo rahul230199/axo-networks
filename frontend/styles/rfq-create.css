@@ -1,365 +1,312 @@
-/* =====================================================
-   ROOT VARIABLES
-===================================================== */
+/* =========================================================
+   AXO RFQ CREATE – ENTERPRISE DESIGN SYSTEM
+========================================================= */
+
+/* ================= THEME VARIABLES ================= */
+
 :root {
   --primary: #1e3a8a;
-  --primary-light: #3b82f6;
-  --primary-dark: #1e40af;
+  --primary-hover: #1e40af;
+  --secondary: #64748b;
+  --danger: #dc2626;
 
-  --secondary: #10b981;
-  --danger: #ef4444;
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --border: #e2e8f0;
 
-  --foreground: #111827;
-  --foreground-light: #374151;
+  --text: #0f172a;
+  --text-light: #64748b;
 
-  --background: #ffffff;
-  --glass-bg: rgba(255, 255, 255, 0.88);
+  --radius: 14px;
+  --radius-lg: 20px;
 
-  --grey-50: #f9fafb;
-  --grey-100: #f3f4f6;
-  --grey-200: #e5e7eb;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
-  --shadow-md: 0 20px 50px rgba(0,0,0,0.12);
-
-  --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition: all 0.25s ease;
 }
 
-/* =====================================================
-   RESET & BASE
-===================================================== */
+/* ================= GLOBAL ================= */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 body {
-  font-family: "Inter", system-ui, sans-serif;
-  background: linear-gradient(180deg, #f8fafc, #eef2f7);
-  color: var(--foreground);
-  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
 }
 
-/* =====================================================
-   HEADER
-===================================================== */
-.header {
+/* ================= TOPBAR ================= */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 40px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(16px);
-  background: var(--glass-bg);
-  border-bottom: 1px solid var(--grey-200);
-
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .logo {
-  font-family: "Outfit", sans-serif;
+  font-weight: 600;
   font-size: 18px;
-  font-weight: 600;
+  color: var(--primary);
 }
 
-.role-badge {
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--primary-light);
-  color: #fff;
-}
-
-.ghost-btn {
-  background: transparent;
-  border: 1px solid var(--grey-200);
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.ghost-btn:hover {
-  background: var(--foreground);
-  color: #fff;
-}
-
-/* =====================================================
-   MAIN LAYOUT
-===================================================== */
-.rfq-create {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px 16px 72px;
-}
-
-/* =====================================================
-   PAGE HEADER
-===================================================== */
-.page-head {
-  margin-bottom: 24px;
-}
-
-.page-head h1 {
-  font-family: "Outfit", sans-serif;
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.page-head p {
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--foreground-light);
-}
-
-/* =====================================================
-   FORM CARD
-===================================================== */
-.form-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--grey-200);
-  border-radius: var(--radius-lg);
-  padding: 22px;
-  margin-bottom: 20px;
-
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
-}
-
-.form-card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.form-card h3 {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-/* =====================================================
-   FORM GRID
-===================================================== */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr;
+.topbar-right {
+  display: flex;
+  align-items: center;
   gap: 16px;
 }
 
-/* Tablet */
-@media (min-width: 640px) {
-  .form-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.logout-btn,
+.secondary-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-/* =====================================================
-   FORM FIELDS
-===================================================== */
-.field {
+.logout-btn:hover,
+.secondary-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* ================= PAGE WRAPPER ================= */
+
+.page-wrapper {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+/* ================= HEADER ================= */
+
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--text-light);
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+/* ================= FORM ================= */
+
+.rfq-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ================= FORM SECTION ================= */
+
+.form-section {
+  background: var(--surface);
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.form-section:hover {
+  transform: translateY(-2px);
+}
+
+.form-section h2 {
+  font-size: 18px;
+  margin-bottom: 22px;
+  color: var(--primary);
+}
+
+/* ================= GRID ================= */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px 24px;
+}
+
+.full-width {
+  grid-column: span 2;
+}
+
+/* ================= FORM GROUP ================= */
+
+.form-group {
   display: flex;
   flex-direction: column;
 }
 
-.field label {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 12px;
+label {
+  font-size: 13px;
   font-weight: 500;
   margin-bottom: 6px;
-  color: var(--foreground-light);
+  color: var(--text-light);
 }
 
-.field input,
-.field select,
-.field textarea {
-  background: var(--background);
-  border: 1px solid var(--grey-200);
-  border-radius: var(--radius-sm);
+input,
+textarea,
+select {
   padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
   font-size: 14px;
   transition: var(--transition);
+  background: #fff;
 }
 
-.field textarea {
-  resize: vertical;
-}
-
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
-  border-color: var(--primary-light);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
 }
 
-/* =====================================================
-   FILE UPLOAD
-===================================================== */
-.upload-box {
-  border: 2px dashed var(--grey-200);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  text-align: center;
-  background: var(--grey-50);
-  transition: var(--transition);
+textarea {
+  resize: vertical;
+  min-height: 100px;
 }
 
-.upload-box:hover {
-  border-color: var(--primary-light);
-  background: #f0f6ff;
+/* ================= FILE INPUT ================= */
+
+input[type="file"] {
+  padding: 10px;
+  border: 1px dashed var(--border);
+  background: #fafafa;
+  cursor: pointer;
 }
 
-.upload-box input {
-  width: 100%;
+input[type="file"]:hover {
+  border-color: var(--primary);
 }
 
-.upload-box p {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--foreground-light);
+.helper-text {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 6px;
 }
 
-/* =====================================================
-   ACTION BAR
-===================================================== */
+/* ================= VALIDATION ================= */
+
+.error-text {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 4px;
+  min-height: 16px;
+}
+
+/* ================= ACTION BUTTONS ================= */
+
 .form-actions {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 32px;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 10px;
 }
 
-/* Tablet & up */
-@media (min-width: 640px) {
-  .form-actions {
-    flex-direction: row;
-    justify-content: flex-end;
-  }
-}
-
-/* =====================================================
-   BUTTONS
-===================================================== */
-.btn,
-.secondary-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  padding: 14px 22px;
-  font-size: 14px;
-  font-weight: 600;
+.primary-btn {
+  padding: 12px 24px;
   border-radius: 999px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
   cursor: pointer;
-
   transition: var(--transition);
 }
 
-/* Primary */
-.btn {
-  background: linear-gradient(
-    135deg,
-    var(--primary),
-    var(--primary-dark)
-  );
-  color: #fff;
-  border: none;
-
-  box-shadow:
-    0 10px 28px rgba(30,58,138,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.15);
-}
-
-.btn:hover {
+.primary-btn:hover {
+  background: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(30,58,138,0.45);
 }
 
-.btn:active {
-  transform: translateY(0);
-}
-
-/* Secondary */
 .secondary-btn {
-  background: #fff;
-  border: 1px solid var(--grey-200);
-  color: var(--foreground);
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
 }
 
-.secondary-btn:hover {
-  background: var(--grey-100);
+/* ================= RESPONSIVE DESIGN ================= */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .page-wrapper {
+    margin: 30px auto;
+  }
+
+  .form-grid {
+    gap: 18px;
+  }
 }
 
-/* =====================================================
-   MOBILE POLISH
-===================================================== */
+/* Mobile */
+@media (max-width: 768px) {
+
+  html {
+    font-size: 15px;
+  }
+
+  .topbar {
+    padding: 16px 20px;
+  }
+
+  .page-wrapper {
+    margin: 24px auto;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: span 1;
+  }
+
+  .form-section {
+    padding: 22px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+}
+
+/* Small Mobile */
 @media (max-width: 480px) {
-  .page-head h1 {
-    font-size: 20px;
+
+  html {
+    font-size: 14px;
   }
 
-  .form-card {
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .form-section {
     padding: 18px;
-  }
-}
-/* =====================
-   STATUS MESSAGE (GLOBAL)
-===================== */
-.status-message {
-  position: sticky;
-  top: 72px;
-  z-index: 200;
-
-  max-width: 720px;
-  margin: 0 auto 20px;
-  padding: 14px 18px;
-
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: center;
-
-  display: none;
-  animation: slideDown 0.35s ease;
-}
-
-/* SUCCESS */
-.status-message.success {
-  background: rgba(220, 252, 231, 0.95);
-  color: #166534;
-  border: 1px solid #86efac;
-}
-
-/* ERROR */
-.status-message.error {
-  background: rgba(254, 226, 226, 0.95);
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-}
-
-/* Animation */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

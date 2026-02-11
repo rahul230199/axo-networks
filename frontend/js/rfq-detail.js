@@ -1,294 +1,342 @@
 /* =========================================================
-   AUTH HELPERS
+   AXO RFQ DETAIL – ENTERPRISE PRODUCTION JS
 ========================================================= */
+
+/* ================= AUTH ================= */
+
 function getUser() {
-  try {
-    return JSON.parse(localStorage.getItem("user"));
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(localStorage.getItem("user")); }
+  catch { return null; }
 }
 
 function getToken() {
   return localStorage.getItem("token");
 }
 
-/* =========================================================
-   AUTH GUARD + RFQ ID
-========================================================= */
-const params = new URLSearchParams(window.location.search);
-const RFQ_ID = Number(params.get("id"));
+/* ================= AUTH GUARD ================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+(function authGuard() {
   const user = getUser();
   const token = getToken();
 
-  if (!user || !token || !RFQ_ID) {
-    window.location.href = "/login";
-    return;
+  if (!user || !token) {
+    window.location.href = "/frontend/login.html";
   }
+})();
 
-  loadRFQDetail();
+/* ================= GLOBAL STATE ================= */
+
+let rfqId = null;
+let currentUser = getUser();
+
+/* =========================================================
+   INIT
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+  document.getElementById("userEmail").textContent = currentUser.email;
+
+  rfqId = getRFQIdFromURL();
+  if (!rfqId) return showError("Invalid RFQ ID");
+
+  await loadRFQDetails();
+  await loadFiles();
+  await loadQuotes();
+  await loadMessages();
+
+  document
+    .getElementById("sendMessageBtn")
+    .addEventListener("click", sendMessage);
 });
 
 /* =========================================================
-   API HELPER
+   LOAD RFQ CORE DETAILS
 ========================================================= */
-async function api(url) {
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`
+
+async function loadRFQDetails() {
+
+  try {
+    const res = await fetchAPI(`/api/rfqs/${rfqId}`);
+
+    const rfq = res;
+
+    setText("rfqPartName", rfq.part_name);
+    setText("rfqId", rfq.id);
+    setText("rfqCreated", formatDate(rfq.created_at));
+
+    setText("detailPartId", rfq.part_id);
+    setText("detailTotalQty", rfq.total_quantity);
+    setText("detailBatchQty", rfq.batch_quantity);
+    setText("detailTargetPrice", rfq.target_price || "-");
+    setText("detailDelivery", rfq.delivery_timeline);
+    setText("detailPpap", rfq.ppap_level);
+    setText("detailMaterial", rfq.material_specification);
+
+    setStatusBadge(rfq.status);
+
+  } catch {
+    showError("Unable to load RFQ details.");
+  }
+}
+
+/* =========================================================
+   LOAD FILES
+========================================================= */
+
+async function loadFiles() {
+
+  try {
+    const files = await fetchAPI(`/api/rfq-files/${rfqId}`);
+
+    const list = document.getElementById("rfqFilesList");
+    list.innerHTML = "";
+
+    if (!files.length) {
+      list.innerHTML = "<li>No documents uploaded</li>";
+      return;
     }
-  });
 
-  const result = await res.json();
-  if (!result.success) {
-    throw new Error(result.message || "API request failed");
-  }
+    files.forEach(file => {
 
-  return result.data;
-}
+      const li = document.createElement("li");
 
-/* =========================================================
-   LOAD RFQ DETAIL
-========================================================= */
-async function loadRFQDetail() {
-  try {
-    clearMessage();
-
-    const [
-      rfq,
-      files,
-      quotes,
-      messages
-    ] = await Promise.all([
-      api(`/api/rfqs/${RFQ_ID}`),
-      api(`/api/rfq-files/${RFQ_ID}`),
-      api(`/api/quotes/rfq/${RFQ_ID}`),
-      api(`/api/rfq-messages/${RFQ_ID}`)
-    ]);
-
-    renderRFQ(rfq);
-    renderFiles(files);
-    renderQuotes(quotes, rfq);
-    renderMessages(messages);
-
-    hideSkeletons();
-
-  } catch (err) {
-    console.error(err);
-    showMessage(err.message || "Failed to load RFQ details", "error");
-  }
-}
-
-/* =========================================================
-   RENDER RFQ
-========================================================= */
-function renderRFQ(rfq) {
-  setText("rfqId", rfq.id);
-  setText("partName", rfq.part_name);
-  setText("totalQty", rfq.total_quantity);
-  setText("deliveryTimeline", rfq.delivery_timeline);
-  setText("ppapLevel", rfq.ppap_level || "-");
-  setText("materialSpec", rfq.material_specification || "-");
-
-  const status = document.getElementById("rfqStatus");
-  status.textContent = rfq.status.replace("_", " ").toUpperCase();
-  status.className = `status-badge ${rfq.status}`;
-}
-
-/* =========================================================
-   FILES
-========================================================= */
-function renderFiles(files) {
-  const list = document.getElementById("fileList");
-  list.innerHTML = "";
-
-  if (!files.length) {
-    list.innerHTML = "<li>No files uploaded</li>";
-    return;
-  }
-
-  files.forEach(f => {
-    list.innerHTML += `
-      <li class="file">
-        <a href="${f.file_url}" target="_blank" rel="noopener">
-          ${f.file_name}
+      li.innerHTML = `
+        <a href="${escapeHTML(file.file_url)}" target="_blank">
+          ${escapeHTML(file.file_name)}
         </a>
-      </li>
-    `;
-  });
-}
+      `;
 
-/* =========================================================
-   QUOTES
-========================================================= */
-function renderQuotes(quotes, rfq) {
-  const container = document.getElementById("quotesContainer");
-  container.innerHTML = "";
-
-  if (!quotes.length) {
-    container.innerHTML =
-      `<p class="muted">No quotes received yet</p>`;
-    return;
-  }
-
-  quotes.forEach(q => {
-    container.innerHTML += `
-      <div class="quote-card">
-        <div class="quote-head">
-          Supplier #${q.supplier_id}
-        </div>
-
-        <div class="quote-grid">
-          <div><span>Price</span><strong>₹${q.price}</strong></div>
-          <div><span>Qty</span><strong>${q.batch_quantity}</strong></div>
-          <div><span>Delivery</span><strong>${q.delivery_timeline}</strong></div>
-        </div>
-
-        <div class="quote-action">
-          ${
-            q.status === "submitted" && rfq.status !== "closed"
-              ? `<button class="accept-btn"
-                    onclick='acceptQuote(${JSON.stringify({
-                      quote_id: q.id,
-                      supplier_id: q.supplier_id,
-                      quantity: q.batch_quantity,
-                      price: q.price
-                    })})'>
-                    Accept Quote
-                 </button>`
-              : `<span class="status-badge closed">Accepted</span>`
-          }
-        </div>
-      </div>
-    `;
-  });
-}
-
-/* =========================================================
-   ACCEPT QUOTE (REAL API)
-========================================================= */
-async function acceptQuote(data) {
-  try {
-    clearMessage();
-
-    const user = getUser();
-
-    const payload = {
-      rfq_id: RFQ_ID,
-      quote_id: data.quote_id,
-      buyer_id: user.id,
-      supplier_id: data.supplier_id,
-      quantity: data.quantity,
-      price: data.price
-    };
-
-    const res = await fetch("/api/quotes/accept", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: JSON.stringify(payload)
+      list.appendChild(li);
     });
 
-    const result = await res.json();
-    if (!result.success) {
-      throw new Error(result.message);
-    }
-
-    showMessage("Quote accepted. Purchase Order created.", "success");
-    loadRFQDetail();
-
-  } catch (err) {
-    console.error(err);
-    showMessage(err.message || "Failed to accept quote", "error");
+  } catch {
+    showError("Unable to load files.");
   }
 }
 
 /* =========================================================
-   MESSAGES
+   LOAD QUOTES
 ========================================================= */
-function renderMessages(messages) {
-  const box = document.getElementById("messageList");
-  box.innerHTML = "";
 
-  const userId = getUser().id;
+async function loadQuotes() {
 
-  messages.forEach(m => {
-    box.innerHTML += `
-      <div class="message ${m.sender_id === userId ? "you" : "other"}">
-        ${m.message}
-      </div>
-    `;
-  });
+  try {
+    const quotes = await fetchAPI(`/api/quotes/rfq/${rfqId}`);
+
+    const tbody = document.getElementById("quotesTableBody");
+    const countLabel = document.getElementById("quoteCount");
+
+    tbody.innerHTML = "";
+    countLabel.textContent = `${quotes.length} Quotes`;
+
+    if (!quotes.length) {
+      tbody.innerHTML =
+        `<tr><td colspan="6">No quotes submitted yet</td></tr>`;
+      return;
+    }
+
+    quotes.forEach(quote => {
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${escapeHTML(quote.supplier_id)}</td>
+        <td>${escapeHTML(quote.price)}</td>
+        <td>${escapeHTML(quote.batch_quantity)}</td>
+        <td>${escapeHTML(quote.delivery_timeline)}</td>
+        <td>${escapeHTML(quote.status)}</td>
+        <td>
+          ${renderQuoteAction(quote)}
+        </td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+  } catch {
+    showError("Unable to load quotes.");
+  }
 }
 
+/* =========================================================
+   LOAD MESSAGES
+========================================================= */
+
+async function loadMessages() {
+
+  try {
+    const messages = await fetchAPI(`/api/rfq-messages/${rfqId}`);
+
+    const container = document.getElementById("messagesContainer");
+    container.innerHTML = "";
+
+    if (!messages.length) {
+      container.innerHTML = "<div>No messages yet</div>";
+      return;
+    }
+
+    messages.forEach(msg => {
+
+      const div = document.createElement("div");
+      div.className = "message-row";
+
+      div.innerHTML = `
+        <strong>User ${escapeHTML(msg.sender_id)}</strong>
+        <p>${escapeHTML(msg.message)}</p>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch {
+    showError("Unable to load messages.");
+  }
+}
+
+/* =========================================================
+   ACCEPT QUOTE
+========================================================= */
+
+function renderQuoteAction(quote) {
+
+  if (currentUser.role.toLowerCase() !== "buyer") return "-";
+  if (quote.status === "accepted") return "Accepted";
+
+  return `
+    <button class="primary-btn"
+      onclick="acceptQuote(${quote.id}, ${quote.supplier_id}, ${quote.price})">
+      Accept
+    </button>
+  `;
+}
+
+async function acceptQuote(quoteId, supplierId, price) {
+
+  try {
+    await fetchAPI("/api/purchase-orders", {
+      method: "POST",
+      body: JSON.stringify({
+        rfq_id: rfqId,
+        quote_id: quoteId,
+        buyer_id: currentUser.id,
+        supplier_id: supplierId,
+        quantity: 1,
+        price: price
+      })
+    });
+
+    await loadQuotes();
+
+  } catch {
+    showError("Unable to accept quote.");
+  }
+}
+
+/* =========================================================
+   SEND MESSAGE
+========================================================= */
+
 async function sendMessage() {
+
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
+
   if (!text) return;
 
   try {
-    const res = await fetch(`/api/rfq-messages/${RFQ_ID}`, {
+
+    await fetchAPI("/api/rfq-messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({
+        rfq_id: rfqId,
+        message: sanitize(text)
+      })
     });
 
-    const result = await res.json();
-    if (!result.success) throw new Error(result.message);
-
     input.value = "";
-    loadRFQDetail();
+    await loadMessages();
 
-  } catch (err) {
-    showMessage(err.message || "Failed to send message", "error");
+  } catch {
+    showError("Message failed to send.");
   }
+}
+
+/* =========================================================
+   API WRAPPER
+========================================================= */
+
+async function fetchAPI(url, options = {}) {
+
+  const response = await fetch(url, {
+    method: options.method || "GET",
+    headers: {
+      "Authorization": `Bearer ${getToken()}`,
+      "Content-Type": "application/json"
+    },
+    body: options.body
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    window.location.href = "/frontend/login.html";
+    return;
+  }
+
+  if (!response.ok) {
+    throw new Error("Network error");
+  }
+
+  const data = await response.json();
+  if (!data.success) throw new Error(data.message);
+
+  return data.data || data;
 }
 
 /* =========================================================
    HELPERS
 ========================================================= */
+
+function getRFQIdFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("id");
+}
+
 function setText(id, value) {
   const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.remove("skeleton");
-  el.textContent = value;
+  if (el) el.textContent = value;
 }
 
-function hideSkeletons() {
-  document.querySelectorAll(".skeleton").forEach(el => {
-    el.classList.add("fade-out");
-    setTimeout(() => el.remove(), 300);
-  });
+function setStatusBadge(status) {
+  const badge = document.getElementById("rfqStatus");
+  badge.textContent = status.toUpperCase();
+  badge.className = `status-badge ${status}`;
 }
 
-function goBack() {
-  window.history.back();
+function formatDate(date) {
+  return new Date(date).toLocaleDateString();
+}
+
+function escapeHTML(str) {
+  return String(str).replace(/[<>&"']/g, "");
+}
+
+function sanitize(str) {
+  return String(str).replace(/[<>&"']/g, "");
+}
+
+function showError(message) {
+  console.error(message);
 }
 
 /* =========================================================
-   STATUS MESSAGE
+   NAVIGATION
 ========================================================= */
-function showMessage(text, type = "error") {
-  const box = document.getElementById("statusMessage");
-  if (!box) return;
 
-  box.textContent = text;
-  box.className = `status-message ${type}`;
-  box.style.display = "block";
-
-  setTimeout(() => {
-    box.style.display = "none";
-  }, 4000);
+function goBack() {
+  window.location.href = "/frontend/buyer-dashboard.html";
 }
 
-function clearMessage() {
-  const box = document.getElementById("statusMessage");
-  if (box) box.style.display = "none";
+function logout() {
+  localStorage.clear();
+  window.location.href = "/frontend/login.html";
 }
