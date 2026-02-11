@@ -67,7 +67,7 @@ const getRFQsByBuyer = async (buyer_id) => {
 };
 
 /**
- * ✅ Get RFQs for Supplier Dashboard (REAL DATA)
+ * Get RFQs for Supplier Dashboard
  */
 const getRFQsForSupplier = async (supplier_id) => {
   const query = `
@@ -95,12 +95,16 @@ const getRFQsForSupplier = async (supplier_id) => {
       END AS has_po
 
     FROM rfqs r
+
     LEFT JOIN quotes q
       ON q.rfq_id = r.id
      AND q.supplier_id = $1
 
     LEFT JOIN purchase_orders po
       ON po.quote_id = q.id
+
+    WHERE
+      r.status != 'draft'
 
     ORDER BY r.created_at DESC;
   `;
@@ -110,23 +114,61 @@ const getRFQsForSupplier = async (supplier_id) => {
 };
 
 /**
- * Get RFQ by ID
+ * Get RFQ by ID (Detailed)
  */
 const getRFQById = async (rfq_id) => {
-  const query = `
-    SELECT *
-    FROM rfqs
-    WHERE id = $1;
-  `;
+  const client = await pool.connect();
 
-  const result = await pool.query(query, [rfq_id]);
-  return result.rows[0];
+  try {
+    await client.query("BEGIN");
+
+    const rfqResult = await client.query(
+      `SELECT * FROM rfqs WHERE id = $1`,
+      [rfq_id]
+    );
+
+    if (!rfqResult.rows.length) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const rfq = rfqResult.rows[0];
+
+    // Attach files
+    const filesResult = await client.query(
+      `SELECT id, file_name, file_type, file_url, uploaded_at
+       FROM rfq_files
+       WHERE rfq_id = $1`,
+      [rfq_id]
+    );
+
+    rfq.files = filesResult.rows;
+
+    // Attach quotes
+    const quotesResult = await client.query(
+      `SELECT id, supplier_id, price, status, created_at
+       FROM quotes
+       WHERE rfq_id = $1`,
+      [rfq_id]
+    );
+
+    rfq.quotes = quotesResult.rows;
+
+    await client.query("COMMIT");
+
+    return rfq;
+
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 module.exports = {
   createRFQ,
   getRFQsByBuyer,
-  getRFQsForSupplier, // 🔥 REQUIRED
+  getRFQsForSupplier,
   getRFQById
 };
-

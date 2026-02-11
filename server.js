@@ -5,6 +5,10 @@ const path = require("path");
 const pool = require("./src/config/db");
 
 const { createUsersFromRequest } = require("./services/userProvisioningService");
+const {
+  authenticate,
+  authorizeAdmin
+} = require("./middleware/auth.middleware");
 
 // Routes
 const authRoutes = require("./routes/auth.routes");
@@ -18,11 +22,17 @@ const purchaseOrderRoutes = require("./routes/purchaseOrder.routes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+
+/* =========================================================
+   MIDDLEWARE
+========================================================= */
+
+app.use(express.json({ limit: "5mb" }));
 
 /* =========================================================
    CORS
 ========================================================= */
+
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -42,12 +52,7 @@ app.use((req, res, next) => {
 });
 
 /* =========================================================
-   STATIC FRONTEND
-========================================================= */
-app.use(express.static(path.join(__dirname, "frontend")));
-
-/* =========================================================
-   API ROUTES (MUST COME BEFORE 404 HANDLER)
+   API ROUTES (ALWAYS FIRST)
 ========================================================= */
 
 app.use("/api/auth", authRoutes);
@@ -59,54 +64,62 @@ app.use("/api/rfq-messages", rfqMessageRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 
 /* =========================================================
-   HEALTH
+   HEALTH CHECK
 ========================================================= */
+
 app.get("/api/_health", async (_, res) => {
   try {
     const r = await pool.query("SELECT NOW()");
     res.json({ success: true, dbTime: r.rows[0].now });
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false });
   }
 });
 
 /* =========================================================
-   NETWORK ACCESS
+   NETWORK ACCESS (ADMIN PROTECTED)
 ========================================================= */
 
-// GET – Admin Dashboard
-app.get("/api/network-request", async (_, res) => {
-  try {
-    const r = await pool.query(
-      `SELECT * FROM network_access_requests
-       ORDER BY submission_timestamp DESC`
-    );
-    res.json({ success: true, data: r.rows });
-  } catch (err) {
-    console.error("❌ Fetch error:", err.message);
-    res.status(500).json({ success: false });
-  }
-});
-
-// GET single request
-app.get("/api/network-request/:id", async (req, res) => {
-  try {
-    const r = await pool.query(
-      "SELECT * FROM network_access_requests WHERE id=$1",
-      [req.params.id]
-    );
-
-    if (!r.rows.length) {
-      return res.status(404).json({ success: false });
+app.get(
+  "/api/network-request",
+  authenticate,
+  authorizeAdmin,
+  async (_, res) => {
+    try {
+      const r = await pool.query(
+        `SELECT * FROM network_access_requests
+         ORDER BY submission_timestamp DESC`
+      );
+      res.json({ success: true, data: r.rows });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false });
     }
-
-    res.json({ success: true, data: r.rows[0] });
-  } catch (err) {
-    res.status(500).json({ success: false });
   }
-});
+);
 
-// POST – Public Form
+app.get(
+  "/api/network-request/:id",
+  authenticate,
+  authorizeAdmin,
+  async (req, res) => {
+    try {
+      const r = await pool.query(
+        "SELECT * FROM network_access_requests WHERE id=$1",
+        [req.params.id]
+      );
+
+      if (!r.rows.length) {
+        return res.status(404).json({ success: false });
+      }
+
+      res.json({ success: true, data: r.rows[0] });
+    } catch {
+      res.status(500).json({ success: false });
+    }
+  }
+);
+
 app.post("/api/network-request", async (req, res) => {
   try {
     const {
@@ -172,65 +185,15 @@ app.post("/api/network-request", async (req, res) => {
 
     res.json({ success: true, id: r.rows[0].id });
   } catch (err) {
-    console.error("❌ Insert error:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Submission failed"
-    });
+    console.error(err);
+    res.status(500).json({ success: false });
   }
 });
 
 /* =========================================================
-   APPROVE / REJECT (THIS MUST BE ABOVE 404)
+   API FALLBACK
 ========================================================= */
 
-app.put("/api/network-request/:id/status", async (req, res) => {
-  const { id } = req.params;
-  const { status, verificationNotes } = req.body;
-
-  if (!["verified", "rejected"].includes(status)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid status"
-    });
-  }
-
-  try {
-    const r = await pool.query(
-      `UPDATE network_access_requests
-       SET status=$1,
-           verification_notes=$2
-       WHERE id=$3
-       RETURNING *`,
-      [status, verificationNotes || null, id]
-    );
-
-    if (!r.rows.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Request not found"
-      });
-    }
-
-    // 🔥 PROVISION USER WHEN APPROVED
-    if (status === "verified") {
-      await createUsersFromRequest(pool, r.rows[0]);
-    }
-
-    res.json({ success: true });
-
-  } catch (err) {
-    console.error("❌ Status update error:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Status update failed"
-    });
-  }
-});
-
-/* =========================================================
-   FINAL API FALLBACK (MUST BE LAST)
-========================================================= */
 app.use("/api", (_, res) => {
   res.status(404).json({
     success: false,
@@ -239,9 +202,45 @@ app.use("/api", (_, res) => {
 });
 
 /* =========================================================
+   STATIC FRONTEND
+========================================================= */
+
+const frontendPath = path.join(__dirname, "frontend");
+
+app.use(express.static(frontendPath));
+
+/* =========================================================
+   CLEAN HTML ROUTING
+   /login → login.html
+   /buyer-dashboard → buyer-dashboard.html
+========================================================= */
+
+app.get("/:page", (req, res, next) => {
+  if (req.params.page.startsWith("api")) return next();
+
+  const filePath = path.join(frontendPath, `${req.params.page}.html`);
+
+  res.sendFile(filePath, (err) => {
+    if (err) next();
+  });
+});
+
+/* =========================================================
+   GLOBAL ERROR HANDLER
+========================================================= */
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error"
+  });
+});
+
+/* =========================================================
    START SERVER
 ========================================================= */
+
 app.listen(PORT, () => {
   console.log(`🚀 AXO API running on port ${PORT}`);
 });
-

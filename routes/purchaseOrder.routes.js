@@ -2,17 +2,65 @@ const express = require("express");
 const router = express.Router();
 
 const purchaseOrderController = require("../src/controllers/purchaseOrder.controller");
+const {
+  authenticate,
+  authorizeBuyer,
+  authorizeSupplier
+} = require("../middleware/auth.middleware");
 
-// Buyer accepts quote → Create PO
-router.post("/", purchaseOrderController.createPurchaseOrder);
+/* ======================================================
+   BUYER ROUTES
+====================================================== */
 
-// Buyer PO list
-router.get("/buyer/:buyer_id", purchaseOrderController.getPOsByBuyer);
+/**
+ * Buyer accepts quote → Create PO
+ * POST /api/purchase-orders
+ */
+router.post(
+  "/",
+  authenticate,
+  authorizeBuyer,
+  purchaseOrderController.createPurchaseOrder
+);
 
-// Supplier PO list
-router.get("/supplier/:supplier_id", purchaseOrderController.getPOsBySupplier);
+/**
+ * Buyer PO list
+ * GET /api/purchase-orders/buyer
+ */
+router.get(
+  "/buyer",
+  authenticate,
+  authorizeBuyer,
+  purchaseOrderController.getPOsByBuyer
+);
 
-// PO details
-router.get("/:id", purchaseOrderController.getPOById);
+/* ======================================================
+   SUPPLIER ROUTES
+====================================================== */
+
+/**
+ * Supplier PO list
+ * GET /api/purchase-orders/supplier
+ */
+router.get(
+  "/supplier",
+  authenticate,
+  authorizeSupplier,
+  purchaseOrderController.getPOsBySupplier
+);
+
+/* ======================================================
+   SHARED ROUTES
+====================================================== */
+
+/**
+ * PO details
+ * GET /api/purchase-orders/:id
+ */
+router.get(
+  "/:id",
+  authenticate,
+  purchaseOrderController.getPOById
+);
 
 module.exports = router;

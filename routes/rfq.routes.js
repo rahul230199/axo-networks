@@ -8,13 +8,6 @@ const {
   authorizeSupplier
 } = require("../middleware/auth.middleware");
 
-/**
- * @swagger
- * tags:
- *   name: RFQs
- *   description: Request For Quotation management
- */
-
 /* ======================================================
    BUYER ROUTES
 ====================================================== */
@@ -31,13 +24,18 @@ router.post(
 );
 
 /**
- * Get RFQs by Buyer
- * GET /api/rfqs?buyer_id=1
+ * Get RFQs for Logged-in Buyer
+ * GET /api/rfqs
  */
 router.get(
   "/",
   authenticate,
   authorizeBuyer,
+  (req, res, next) => {
+    // Force buyer_id from JWT only (security)
+    req.query.buyer_id = req.user.id;
+    next();
+  },
   rfqController.getRFQsByBuyer
 );
 
@@ -46,7 +44,7 @@ router.get(
 ====================================================== */
 
 /**
- * Get RFQs for Supplier Dashboard (REAL DATA)
+ * Get RFQs for Supplier Dashboard
  * GET /api/rfqs/supplier
  */
 router.get(
@@ -61,7 +59,7 @@ router.get(
 ====================================================== */
 
 /**
- * Get RFQ by ID (Buyer / Supplier)
+ * Get RFQ by ID
  * GET /api/rfqs/:id
  */
 router.get(
@@ -71,4 +69,3 @@ router.get(
 );
 
 module.exports = router;
-

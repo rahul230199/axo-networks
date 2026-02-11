@@ -6,40 +6,45 @@ const rfqModel = require("../../models/rfq.model");
  */
 const createRFQ = async (req, res) => {
   try {
-    // TEMP fallback
-    req.body.buyer_id = req.body.buyer_id || req.user.id;
+    // 🔒 Force buyer_id from authenticated user only
+    const payload = {
+      ...req.body,
+      buyer_id: req.user.id
+    };
 
-    const rfq = await rfqModel.createRFQ(req.body);
+    const rfq = await rfqModel.createRFQ(payload);
 
     return res.status(201).json({
       success: true,
       message: "RFQ created successfully",
       data: rfq
     });
+
   } catch (error) {
     console.error("Create RFQ error:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: "Failed to create RFQ"
     });
   }
 };
 
 /**
  * Get RFQs by Buyer
- * GET /rfqs?buyer_id=1
+ * GET /rfqs
  */
 const getRFQsByBuyer = async (req, res) => {
   try {
-    const buyer_id = req.user.id;
+    const buyerId = req.user.id;
 
-    const rfqs = await rfqModel.getRFQsByBuyer(buyer_id);
+    const rfqs = await rfqModel.getRFQsByBuyer(buyerId);
 
     return res.status(200).json({
       success: true,
       data: rfqs
     });
+
   } catch (error) {
     console.error("Get RFQs error:", error);
 
@@ -51,7 +56,7 @@ const getRFQsByBuyer = async (req, res) => {
 };
 
 /**
- * ✅ Get RFQs for Supplier Dashboard (REAL DATA)
+ * Get RFQs for Supplier Dashboard
  * GET /rfqs/supplier
  */
 const getRFQsForSupplier = async (req, res) => {
@@ -64,6 +69,7 @@ const getRFQsForSupplier = async (req, res) => {
       success: true,
       data: rfqs
     });
+
   } catch (error) {
     console.error("Get Supplier RFQs error:", error);
 
@@ -75,12 +81,19 @@ const getRFQsForSupplier = async (req, res) => {
 };
 
 /**
- * Get RFQ Details (Buyer / Supplier)
+ * Get RFQ Details
  * GET /rfqs/:id
  */
 const getRFQById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid RFQ ID"
+      });
+    }
 
     const rfq = await rfqModel.getRFQById(id);
 
@@ -91,16 +104,34 @@ const getRFQById = async (req, res) => {
       });
     }
 
+    // 🔒 Access Control Check
+    const userRole = req.user.role;
+    const userId = req.user.id;
+
+    if (
+      userRole === "buyer" &&
+      rfq.buyer_id !== userId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    // Suppliers allowed to view open RFQs
+    // OR if they have already quoted (depends on model logic)
+
     return res.status(200).json({
       success: true,
       data: rfq
     });
+
   } catch (error) {
     console.error("Get RFQ error:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: "Failed to fetch RFQ"
     });
   }
 };
@@ -108,7 +139,6 @@ const getRFQById = async (req, res) => {
 module.exports = {
   createRFQ,
   getRFQsByBuyer,
-  getRFQsForSupplier, // 🔥 THIS IS THE KEY
+  getRFQsForSupplier,
   getRFQById
 };
-

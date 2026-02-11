@@ -14,8 +14,18 @@ const authenticate = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
+
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    if (!decoded || !decoded.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token payload"
+      });
+    }
+
+    // Fetch user from DB
     const result = await pool.query(
       `SELECT id, email, role, status
        FROM users
@@ -23,14 +33,27 @@ const authenticate = async (req, res, next) => {
       [decoded.userId]
     );
 
-    if (!result.rows.length || result.rows[0].status !== "active") {
+    if (!result.rows.length) {
       return res.status(401).json({
         success: false,
-        message: "User inactive or not found"
+        message: "User not found"
       });
     }
 
-    req.user = result.rows[0];
+    const user = result.rows[0];
+
+    if (user.status !== "active") {
+      return res.status(401).json({
+        success: false,
+        message: "User inactive"
+      });
+    }
+
+    // Normalize role (important)
+    user.role = user.role.toLowerCase();
+
+    req.user = user;
+
     next();
   } catch (err) {
     return res.status(401).json({
@@ -41,8 +64,9 @@ const authenticate = async (req, res, next) => {
 };
 
 /* ===================== ROLE GUARDS ===================== */
+
 const authorizeAdmin = (req, res, next) => {
-  if (req.user.role !== "ADMIN") {
+  if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({
       success: false,
       message: "Admin access only"
@@ -52,22 +76,40 @@ const authorizeAdmin = (req, res, next) => {
 };
 
 const authorizeBuyer = (req, res, next) => {
-  if (req.user.role !== "BUYER") {
+  if (!req.user) {
+    return res.status(403).json({
+      success: false,
+      message: "Unauthorized"
+    });
+  }
+
+  // buyer OR both
+  if (req.user.role !== "buyer" && req.user.role !== "both") {
     return res.status(403).json({
       success: false,
       message: "Buyer access only"
     });
   }
+
   next();
 };
 
 const authorizeSupplier = (req, res, next) => {
-  if (req.user.role !== "SUPPLIER") {
+  if (!req.user) {
+    return res.status(403).json({
+      success: false,
+      message: "Unauthorized"
+    });
+  }
+
+  // supplier OR both
+  if (req.user.role !== "supplier" && req.user.role !== "both") {
     return res.status(403).json({
       success: false,
       message: "Supplier access only"
     });
   }
+
   next();
 };
 
@@ -77,4 +119,3 @@ module.exports = {
   authorizeBuyer,
   authorizeSupplier
 };
-

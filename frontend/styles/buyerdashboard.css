@@ -1,362 +1,370 @@
-/* =====================
-   ROOT VARIABLES (FROM YOU)
-===================== */
+/* =====================================================
+   AXO NETWORKS – ENTERPRISE DASHBOARD UI
+===================================================== */
+
+/* ================= VARIABLES ================= */
+
 :root {
-  --primary: #1e3a8a;
-  --primary-light: #3b82f6;
-  --primary-dark: #1e40af;
-  --secondary: #10b981;
-  --accent: #f59e0b;
-  --foreground: #111827;
-  --foreground-light: #374151;
-  --background: #ffffff;
-  --light-grey: #f9fafb;
-  --grey: #e5e7eb;
-  --dark-grey: #6b7280;
-  --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --primary: #1E3A8A;
+  --primary-hover: #1d4ed8;
+
+  --bg-app: #f4f6f9;
+  --bg-card: #ffffff;
+
+  --text-main: #111827;
+  --text-secondary: #6b7280;
+
+  --border: #e5e7eb;
+
+  --radius: 14px;
+  --shadow: 0 6px 24px rgba(0,0,0,0.05);
+
+  --transition: 0.25s ease;
 }
 
-/* =====================
-   GLOBAL
-===================== */
+/* ================= GLOBAL ================= */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
-  background: var(--light-grey);
-  color: var(--foreground);
+  background: var(--bg-app);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* =====================
-   HEADER
-===================== */
+/* ================= HEADER ================= */
+
 .header {
-  background: var(--background);
-  padding: 16px 24px;
+  height: 64px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--grey);
+  justify-content: space-between;
+  padding: 0 32px;
 }
 
-.header h2 {
+.brand {
+  font-weight: 600;
+  font-size: 18px;
   color: var(--primary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.status-indicator .dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.icon-btn:hover {
+  transform: scale(1.1);
 }
 
 .user-info {
   display: flex;
-  gap: 16px;
   align-items: center;
+  gap: 12px;
 }
 
-.user-info span {
-  font-size: 14px;
-  color: var(--foreground-light);
-}
-
-.user-info button {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
+.logout-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 999px;
   cursor: pointer;
   transition: var(--transition);
 }
 
-.user-info button:hover {
-  background: var(--primary-dark);
+.logout-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
 
-/* =====================
-   SUMMARY CARDS
-===================== */
-.summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  padding: 24px;
+/* ================= LAYOUT ================= */
+
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - 64px);
 }
 
-.card {
-  background: var(--background);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+/* ================= SIDEBAR ================= */
+
+.sidebar {
+  width: 220px;
+  background: #fff;
+  border-right: 1px solid var(--border);
+  padding-top: 30px;
 }
 
-.card h3 {
+.nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-item {
+  padding: 12px 24px;
   font-size: 14px;
-  color: var(--foreground-light);
-  margin-bottom: 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-.card p {
+.nav-item.active,
+.nav-item:hover {
+  background: rgba(37,99,235,0.08);
+  color: var(--primary);
+  border-left: 3px solid var(--primary);
+}
+
+/* ================= MAIN ================= */
+
+.main {
+  flex: 1;
+  padding: 40px;
+}
+
+.page-intro h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.page-intro p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+/* ================= STATS ================= */
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.stat-value {
   font-size: 28px;
   font-weight: 600;
+  margin-top: 8px;
   color: var(--primary);
 }
 
-/* =====================
-   ACTION BAR
-===================== */
-.actions {
-  padding: 0 24px 24px;
-  display: flex;
-  justify-content: flex-end;
+/* ================= CHARTS ================= */
+
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px,1fr));
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
-.actions button {
-  background: var(--secondary);
+.chart-card {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* ================= TABLE ================= */
+
+.table-card {
+  background: var(--bg-card);
+  padding: 28px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.table-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.table-header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#searchInput {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.primary-btn {
+  background: var(--primary);
   color: #fff;
   border: none;
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 999px;
   cursor: pointer;
   transition: var(--transition);
 }
 
-.actions button:hover {
-  background: #059669;
+.primary-btn:hover {
+  background: var(--primary-hover);
 }
 
-/* =====================
-   TABLE
-===================== */
-.table-section {
-  padding: 0 24px 40px;
-}
-
-.table-section h3 {
-  margin-bottom: 12px;
-  color: var(--foreground);
-}
+/* ================= TABLE ================= */
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--background);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
 }
 
 thead {
-  background: var(--primary-light);
-  color: #fff;
+  background: #f3f4f6;
 }
 
-th, td {
-  padding: 14px 16px;
-  font-size: 14px;
+th {
+  padding: 14px;
+  font-size: 12px;
   text-align: left;
+  color: var(--text-secondary);
+}
+
+td {
+  padding: 14px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
 tbody tr {
-  border-bottom: 1px solid var(--grey);
-}
-
-tbody tr:last-child {
-  border-bottom: none;
-}
-
-.status {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.status.draft {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status.submitted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status.closed {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.table-section button {
-  background: var(--accent);
-  border: none;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-}
-/* =====================
-   RFQ CREATE FORM
-===================== */
-
-form.card {
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-form.card h3 {
-  margin-bottom: 20px;
-  color: var(--primary);
-}
-
-form.card label {
-  display: block;
-  margin-top: 14px;
-  margin-bottom: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--foreground-light);
-}
-
-form.card input,
-form.card select {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--grey);
-  border-radius: 8px;
-  font-size: 14px;
-  transition: var(--transition);
-  background: var(--background);
-}
-
-form.card input:focus,
-form.card select:focus {
-  outline: none;
-  border-color: var(--primary-light);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
-}
-
-form.card button[type="submit"] {
-  margin-top: 24px;
-  width: 100%;
-  padding: 14px;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
   transition: var(--transition);
 }
 
-form.card button[type="submit"]:hover {
-  background: var(--primary-dark);
+tbody tr:hover {
+  background: #f9fafb;
 }
 
-/* =====================
-   RFQ CREATE HEADER BACK BUTTON
-===================== */
-
-.header .user-info button {
-  background: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
+.loading {
+  text-align: center;
+  color: var(--text-secondary);
 }
 
-.header .user-info button:hover {
-  background: var(--primary);
-  color: #fff;
-}
-/* =====================
-   RFQ DETAIL PAGE
-===================== */
+/* ================= MOBILE ================= */
 
-/* RFQ info text */
-.table-section .card p {
-  font-size: 14px;
-  margin: 6px 0;
-  color: var(--foreground-light);
+@media (max-width: 1024px) {
+  .main {
+    padding: 30px;
+  }
 }
 
-/* RFQ FILE LIST */
-#rfqFiles {
-  list-style: none;
-  padding-left: 0;
-}
+@media (max-width: 768px) {
 
-#rfqFiles li {
-  padding: 8px 0;
-  font-size: 14px;
-}
+  .app-layout {
+    flex-direction: column;
+  }
 
-#rfqFiles a {
-  color: var(--primary);
-  text-decoration: none;
-}
+  .sidebar {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+  }
 
-#rfqFiles a:hover {
-  text-decoration: underline;
-}
+  .nav {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+  }
 
-/* QUOTES TABLE BUTTON */
-.table-section table button {
-  background: var(--secondary);
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: var(--transition);
-}
+  .nav-item {
+    border-left: none;
+    padding: 10px;
+    text-align: center;
+  }
 
-.table-section table button:hover {
-  background: #059669;
-}
+  .main {
+    padding: 20px;
+  }
 
-/* MESSAGE BOX */
-#messagesBox {
-  border: 1px solid var(--grey);
-  border-radius: 8px;
-  padding: 12px;
-  background: var(--light-grey);
-}
+  .stats-row,
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
 
-#messagesBox p {
-  margin-bottom: 8px;
-  font-size: 13px;
-}
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 
-#messageInput {
-  width: 100%;
-  border: 1px solid var(--grey);
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 14px;
-  resize: none;
-}
+  .table-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
 
-#messageInput:focus {
-  outline: none;
-  border-color: var(--primary-light);
-}
-
-.table-section .card button {
-  margin-top: 10px;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.table-section .card button:hover {
-  background: var(--primary-dark);
+  #searchInput {
+    width: 100%;
+  }
 }

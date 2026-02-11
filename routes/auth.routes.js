@@ -23,7 +23,7 @@ function generateRefreshToken(payload) {
 /* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -32,11 +32,13 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    email = email.trim().toLowerCase();
+
     const result = await pool.query(
       `SELECT id, email, password_hash, role, status
        FROM users
        WHERE email = $1`,
-      [email.toLowerCase()]
+      [email]
     );
 
     if (!result.rows.length) {
@@ -67,14 +69,17 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // Normalize role to lowercase always
+    const normalizedRole = user.role.toLowerCase();
+
     const accessToken = generateAccessToken({
       userId: user.id,
-      role: user.role
+      role: normalizedRole
     });
 
     const refreshToken = generateRefreshToken({
       userId: user.id,
-      role: user.role
+      role: normalizedRole
     });
 
     res.json({
@@ -84,11 +89,12 @@ router.post("/login", async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: normalizedRole
       }
     });
+
   } catch (err) {
-    console.error("❌ LOGIN ERROR:", err.message);
+    console.error("❌ LOGIN ERROR:", err);
     res.status(500).json({
       success: false,
       message: "Login failed"
@@ -119,6 +125,7 @@ router.post("/refresh-token", (req, res) => {
       success: true,
       token: newAccessToken
     });
+
   } catch {
     res.status(401).json({
       success: false,
@@ -128,4 +135,3 @@ router.post("/refresh-token", (req, res) => {
 });
 
 module.exports = router;
-

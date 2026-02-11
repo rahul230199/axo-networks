@@ -2,66 +2,150 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Buyer Dashboard | AXO Networks</title>
-  <link rel="stylesheet" href="/styles/buyerdashboard.css" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./styles/buyerdashboard.css" />
 </head>
+
 <body>
 
-  <!-- HEADER -->
+  <!-- ================= HEADER ================= -->
   <header class="header">
-    <h2>AXO Networks – Buyer Dashboard</h2>
-    <div class="user-info">
-      <span id="userEmail">buyer@email.com</span>
-      <button onclick="logout()">Logout</button>
+    <div class="header-left">
+      <div class="brand">AXO Networks</div>
+    </div>
+
+    <div class="header-right">
+      <div class="status-indicator">
+        <span class="dot"></span>
+        <span>Live</span>
+      </div>
+
+      <button class="icon-btn" id="notificationBtn">🔔</button>
+      <button class="icon-btn" id="themeToggle">🌙</button>
+
+      <div class="user-info">
+        <span id="userEmail"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
     </div>
   </header>
 
-  <!-- SUMMARY CARDS -->
-  <section class="summary">
-    <div class="card">
-      <h3>Total RFQs</h3>
-      <p id="totalRfqs">0</p>
-    </div>
 
-    <div class="card">
-      <h3>Active RFQs</h3>
-      <p id="activeRfqs">0</p>
-    </div>
+  <!-- ================= LAYOUT ================= -->
+  <div class="app-layout">
 
-    <div class="card">
-      <h3>Purchase Orders</h3>
-      <p id="totalPos">0</p>
-    </div>
-  </section>
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <nav class="nav">
+        <a class="nav-item active">Dashboard</a>
+        <a class="nav-item" onclick="goToCreateRFQ()">Create RFQ</a>
+        <a class="nav-item" onclick="goToPO()">Purchase Orders</a>
+      </nav>
+    </aside>
 
-  <!-- ACTION BAR -->
-  <section class="actions">
-    <button onclick="goToCreateRFQ()">+ Create RFQ</button>
-  </section>
 
-  <!-- RFQ TABLE -->
-  <section class="table-section">
-    <h3>My RFQs</h3>
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main">
 
-    <table>
-      <thead>
-        <tr>
-          <th>RFQ ID</th>
-          <th>Part Name</th>
-          <th>Total Qty</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="rfqTableBody">
-        <!-- Filled by JS -->
-        <tr>
-          <td colspan="5">Loading RFQs...</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+      <!-- Page Intro -->
+      <section class="page-intro">
+        <h1>Dashboard</h1>
+        <p>Overview of RFQs, Purchase Orders and activity</p>
+      </section>
 
+
+      <!-- ===== STATS ROW ===== -->
+      <section class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total RFQs</div>
+          <div class="stat-value" id="totalRfqs">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Active RFQs</div>
+          <div class="stat-value" id="activeRfqs">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Purchase Orders</div>
+          <div class="stat-value" id="totalPos">0</div>
+        </div>
+      </section>
+
+
+      <!-- ===== CHARTS ===== -->
+      <section class="charts-row">
+
+        <div class="chart-card">
+          <div class="card-header">
+            <h3>RFQ Status Distribution</h3>
+          </div>
+          <canvas id="rfqPieChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <h3>RFQs Over Time</h3>
+          </div>
+          <canvas id="rfqBarChart"></canvas>
+        </div>
+
+      </section>
+
+
+      <!-- ===== RFQ TABLE ===== -->
+      <section class="table-card">
+
+        <div class="table-header">
+          <div>
+            <h3>My RFQs</h3>
+            <p>Manage and track your RFQs</p>
+          </div>
+
+          <div class="table-actions">
+            <input type="text" id="searchInput" placeholder="Search by part name..." />
+            <button class="primary-btn" onclick="goToCreateRFQ()">+ Create RFQ</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Part Name</th>
+                <th>Total Qty</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody id="rfqTableBody">
+              <tr>
+                <td colspan="6" class="loading">Loading RFQs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+
+  <!-- ================= JS ================= -->
   <script src="./js/buyer-dashboard.js"></script>
+
 </body>
 </html>
