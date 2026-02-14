@@ -24,14 +24,20 @@ document.addEventListener("DOMContentLoaded", () => {
 function redirectToDashboard(user) {
   if (!user || !user.role) return;
 
-  const role = user.role.toUpperCase();
+  const role = String(user.role).toLowerCase();
 
-  if (role === "ADMIN") {
+  if (role === "admin") {
     window.location.href = "/admin-dashboard";
-  } else if (role === "SUPPLIER") {
+  } 
+  else if (role === "supplier") {
     window.location.href = "/supplier-dashboard";
-  } else {
+  } 
+  else if (role === "buyer") {
     window.location.href = "/buyer-dashboard";
+  }
+  else {
+    clearAuthData();
+    window.location.href = "/portal-login";
   }
 }
 

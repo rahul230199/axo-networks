@@ -20,7 +20,7 @@ function getToken() {
   const token = getToken();
 
   if (!user || !token || user.role?.toLowerCase() !== "buyer") {
-    window.location.href = "/frontend/login.html";
+    window.location.href = "/portal-login";
   }
 })();
 
@@ -70,7 +70,7 @@ async function handleSubmit(event, status) {
     });
 
     if (response.status === 401 || response.status === 403) {
-      window.location.href = "/frontend/login.html";
+      window.location.href = "/portal-login";
       return;
     }
 
@@ -84,7 +84,7 @@ async function handleSubmit(event, status) {
       throw new Error(result.message || "Submission failed");
     }
 
-    window.location.href = "/frontend/buyer-dashboard.html";
+    window.location.href = "/buyer-dashboard";
 
   } catch (error) {
     showFormError("Unable to submit RFQ. Please try again.");
@@ -216,10 +216,10 @@ function sanitize(value) {
 ========================================================= */
 
 function goBack() {
-  window.location.href = "/frontend/buyer-dashboard.html";
+  window.location.href = "/buyer-dashboard";
 }
 
 function logout() {
   localStorage.clear();
-  window.location.href = "/frontend/login.html";
+  window.location.href = "/portal-login";
 }
